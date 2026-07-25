@@ -2,8 +2,13 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const studentSchema = mongoose.Schema({
+
   profileImage: {
     url: {
+      type: String,
+      required: true
+    },
+    publicId: {
       type: String,
       required: true
     }
