@@ -66,6 +66,27 @@ const studentSchema = mongoose.Schema({
   timestamps: true
 });
 
+
+//Auto-generate Roll Number before saving
+studentSchema.pre('save', async function(next) {
+  if (this.rollNo) return next(); 
+
+  const currentYear = new Date().getFullYear();
+  const lastUser = await this.constructor.findOne().sort({ rollNo: -1 });
+  sort({ rollNo: -1 });
+
+  let newRollNo;
+  if (lastUser && lastUser.rollNo && lastUser.rollNo.startsWith(currentYear.toString())) {
+    const lastRollNumber = parseInt(lastUser.rollNo.slice(4), 10);
+    newRollNo = `${currentYear}${String(lastRollNumber + 1).padStart(3, '0')}`;
+  } else {
+    newRollNo = `${currentYear}001`;
+  }
+
+  this.rollNo = newRollNo;
+  next();
+});
+
 studentSchema.pre('save', async function(next) {
   if (!this.isModified('password')) {
     return next();
