@@ -1,4 +1,4 @@
-import cloudinary from '../../lib/cloudinary.js'; // Adjust path if needed
+import cloudinary from '@/src/lib/cloudinary.js'; // Adjust path if needed
 import { promises as fs } from 'fs';
 
 /**
