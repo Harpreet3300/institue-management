@@ -4,14 +4,11 @@ import bcrypt from 'bcryptjs';
 const studentSchema = mongoose.Schema({
 
   profileImage: {
-    url: {
-      type: String,
-      required: true
+    type: {
+      url: { type: String, default: '' },
+      publicId: { type: String, default: '' },
     },
-    publicId: {
-      type: String,
-      required: true
-    }
+    default: {},
   },
   name: {
     type: String,
@@ -67,13 +64,12 @@ const studentSchema = mongoose.Schema({
 });
 
 
-//Auto-generate Roll Number before saving
-studentSchema.pre('save', async function(next) {
-  if (this.rollNo) return next(); 
+// Auto-generate Roll Number before saving
+studentSchema.pre('save', async function() {
+  if (this.rollNo) return;
 
   const currentYear = new Date().getFullYear();
   const lastUser = await this.constructor.findOne().sort({ rollNo: -1 });
-  sort({ rollNo: -1 });
 
   let newRollNo;
   if (lastUser && lastUser.rollNo && lastUser.rollNo.startsWith(currentYear.toString())) {
@@ -84,16 +80,15 @@ studentSchema.pre('save', async function(next) {
   }
 
   this.rollNo = newRollNo;
-  next();
 });
 
-studentSchema.pre('save', async function(next) {
+studentSchema.pre('save', async function() {
   if (!this.isModified('password')) {
-    return next();
+    return;
   }
+
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 
 studentSchema.methods.matchPassword = async function(enteredPassword) {
