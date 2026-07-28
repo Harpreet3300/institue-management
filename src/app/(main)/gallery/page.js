@@ -1,8 +1,8 @@
 export default function about() {
   return (
     <div>
-      <h1>Home</h1>
-      <p>This is the home page.</p>
+      <h1>Gallery</h1>
+      <p>This is the gallery page.</p>
     </div>
   );
 }

@@ -40,11 +40,11 @@ const AdminRegister = () => {
     
     window.addEventListener('scroll', handleScroll);
     
-    // Check if user is admin
+    // Check if the current browser session already has admin access
     if (typeof window !== 'undefined') {
       const adminToken = localStorage.getItem('adminToken');
-      if (adminToken) {
-        router.push('/admin/login');
+      if (!adminToken) {
+        router.replace('/admin-login');
       } else {
         setIsAdmin(true);
       }
@@ -152,7 +152,7 @@ const AdminRegister = () => {
 
       // Redirect to login after 2 seconds
       setTimeout(() => {
-        router.push('/adminLogin');
+        router.push('/admin-login');
       }, 2000);
     } catch (err) {
       setError(err.message);
