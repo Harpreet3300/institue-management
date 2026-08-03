@@ -1,382 +1,466 @@
+// components/Navbar.jsx
 "use client";
 
-import { useState, useContext, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, ChevronDown, User, ChevronRight } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserContext } from "./new/userContext";
-import Image from 'next/image';
-
-const dropdowns = [
-  {
-    name: "Online Courses",
-    options: [
-      { name: "Register", path: "/onlineCourse/register" },
-      { name: "Login", path: "/onlineCourse/login" },
-      { name: "Course Videos", path: "/onlineCourse/videos" },
-    ],
-  },
-  {
-    name: "Exams",
-    options: [
-      { name: "Weekly Exam", path: "/weekly-exam" },
-    ],
-  },
-  {
-    name: "Verification",
-    options: [
-      { name: "Verify Student", path: "/Verification/Verify-Student" },
-      { name: "Verify Staff", path: "/Verification/Verify-Staff" },
-    ],
-  },
-  {
-    name: "Resources",
-    options: [
-      { name: "Study Material", path: "/resources" },
-    ],
-  },
-  {
-    name: "Job",
-    options: [
-      
-      { name: "Job Apply", path: "/job/jobApply" },
-    ],
-  },
-];
-
-const secondaryMenuItems = (isAuthenticated) => [
-  { name: "Home", path: "/home" },
-  { name: "Courses", path: "/courses" },
-  ...(isAuthenticated
-    ? []
-    : [
-        { name: "Register", path: "/register" },
-        { name: "Login", path: "/login" },
-      ]),
-  { name: "About", path: "/about" },
-  { name: "Gallery", path: "/gallery" },
-  { name: "Typing Test", path: "/typing-test" },
-  { name: "Achievements", path: "/achievements" },
-  ...(isAuthenticated ? [{ name: "Logout", path: "/home" }] : []),
-];
-
-const isActivePath = (currentPath, targetPath, exact = true) => {
-  if (!currentPath || typeof currentPath !== "string") return false;
-  const normalizedCurrent = currentPath.toLowerCase().split("?")[0];
-  const normalizedTarget = targetPath.toLowerCase();
-  return exact
-    ? normalizedCurrent === normalizedTarget
-    : normalizedCurrent.startsWith(normalizedTarget);
-};
+import {
+  FiHome,
+  FiInfo,
+  FiAward,
+  FiLogIn,
+  FiImage,
+  FiBookOpen,
+  FiUserPlus,
+  FiMenu,
+  FiX,
+  FiChevronDown,
+  FiUser,
+  FiSettings,
+  FiHelpCircle,
+  FiLogOut,
+  FiBell,
+  FiGrid,
+  FiBookmark,
+  FiCalendar,
+  FiCreditCard,
+  FiFileText,
+  FiStar,
+  FiClock,
+} from "react-icons/fi";
+import { FaGraduationCap } from "react-icons/fa";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState(null);
-  const [hoveredDropdown, setHoveredDropdown] = useState(null);
-  const [forceUpdate, setForceUpdate] = useState(0);
-  const { isAuthenticated, logout, loading, initializeAuth, user, refreshKey } = useContext(UserContext);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = useRef(null);
   const pathname = usePathname();
-  const router = useRouter();
+
+  // Set to true for logged in state, false for logged out
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+
+  const userData = {
+    name: "Harpreet Kaur",
+    email: "harpreet.kaur@edumanage.com",
+    role: "Student",
+    course: "BCA - 5th Semester",
+    rollNo: "243698",
+    college: "GRD Group of College, Ropar",
+    initials: "HK",
+    gpa: "8.5",
+    completedCourses: 12,
+  };
+
+  const navItems = [
+    { name: "Home", href: "/", icon: FiHome },
+    { name: "About", href: "/about", icon: FiInfo },
+    { name: "Achievements", href: "/achievements", icon: FiAward },
+    // { name: "Admin Login", href: "/admin-login", icon: FiLogIn },
+    { name: "Gallery", href: "/gallery", icon: FiImage },
+    { name: "Courses", href: "/courses", icon: FiBookOpen },
+  ];
+
+  const authItems = [
+    { name: "Login", href: "/login", icon: FiLogIn, variant: "secondary" },
+    { name: "Register", href: "/register", icon: FiUserPlus, variant: "primary" },
+  ];
+
+  const profileMenuItems = [
+    { icon: FiUser, label: "My Profile", href: "/profile" },
+    { icon: FiLogOut, label: "Logout", href: "#", onClick: "logout" },
+  ];
 
   useEffect(() => {
-    setIsOpen(false);
-    setActiveDropdown(null);
-  }, [pathname]);
-
-  // Force re-render when authentication state changes
-  useEffect(() => {
-    setForceUpdate(prev => prev + 1);
-  }, [isAuthenticated, user, refreshKey]);
-
-  // Listen for custom auth events
-  useEffect(() => {
-    const handleAuthChange = () => {
-      setForceUpdate(prev => prev + 1);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
     };
-
-    window.addEventListener('authStateChanged', handleAuthChange);
-    return () => window.removeEventListener('authStateChanged', handleAuthChange);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  if (loading) {
-    return <div className="fixed top-0 left-0 w-full h-16 bg-white shadow-md z-50"></div>;
-  }
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
-    logout();
-    setIsOpen(false);
-    // Force immediate re-render
-    setForceUpdate(prev => prev + 1);
-    router.push('/login');
-  };
-
-  const handleDropdownClick = (name) => {
-    setActiveDropdown(activeDropdown === name ? null : name);
-  };
-
-  const isDropdownActive = (dropdown) => {
-    return dropdown.options.some(option => isActivePath(pathname, option.path, false));
+    setIsLoggedIn(false);
+    setIsProfileOpen(false);
   };
 
   return (
-    <nav className="fixed top-0 left-0 w-full bg-white shadow-md z-50">
-      <div className="container mx-auto flex justify-between items-center p-4">
-        <Link href="/" className="flex items-center">
-          <Image
-            src="/FINAL_lg_LOGO.svg"
-            alt="Large Logo"
-            width={48}
-            height={48}
-            className="hidden lg:block object-contain w-auto h-14 "
-            priority
-          />
-          <Image
-            src="/FINAL_sm_logo.svg"
-            alt="Small Logo"
-            width={48}
-            height={48}
-            className="block lg:hidden object-contain w-auto h-12"
-            priority
-            onError={(e) => {
-              console.error('Small logo failed to load');
-              e.target.style.display = 'none';
-            }}
-          />
-        </Link>
-
-        {/* Desktop Navigation */}
-        <div className="hidden lg:flex space-x-6 items-center">
-          {dropdowns.map((dropdown) => (
-            <div
-              key={dropdown.name}
-              className="relative"
-              onMouseEnter={() => {
-                setHoveredDropdown(dropdown.name);
-                setActiveDropdown(dropdown.name);
-              }}
-              onMouseLeave={() => {
-                setHoveredDropdown(null);
-                if (activeDropdown === dropdown.name && !isDropdownActive(dropdown)) {
-                  setActiveDropdown(null);
-                }
-              }}
+    <>
+      <motion.nav
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isScrolled
+            ? "bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-lg shadow-lg"
+            : "bg-white dark:bg-[#0F172A] shadow-sm"
+        } border-b border-[#E2E8F0] dark:border-[#475569]`}
+        style={{ height: "72px" }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+          <div className="flex items-center justify-between h-full">
+            {/* Logo */}
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-shrink-0"
             >
-              <button
-                className={`flex items-center px-2 py-1 rounded-md transition-all duration-300 ${
-                  isDropdownActive(dropdown)
-                    ? "text-blue-600 bg-blue-50 font-semibold"
-                    : "text-gray-700 hover:text-blue-500 hover:bg-blue-50"
-                }`}
-              >
-                {dropdown.name}
-                <ChevronDown
-                  size={16}
-                  className={`ml-1 transition-transform ${
-                    (activeDropdown === dropdown.name || isDropdownActive(dropdown))
-                      ? "rotate-180 text-blue-500"
-                      : "text-gray-500"
-                  }`}
-                />
-              </button>
-              
-              <AnimatePresence>
-                {(activeDropdown === dropdown.name) && (
+              <Link href="/" className="flex items-center space-x-2 group">
+                <div className="w-10 h-10 bg-[#0057D9] rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-[#003E99]">
+                  <span className="text-white font-bold text-xl">EM</span>
+                </div>
+                <span className="text-xl font-bold text-[#111111] dark:text-white transition-colors duration-200">
+                  EduManage
+                </span>
+              </Link>
+            </motion.div>
+
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex lg:items-center lg:space-x-1">
+              {navItems.map((item) => {
+                const isActive = pathname === item.href;
+                const Icon = item.icon;
+                
+                return (
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute left-0 mt-2 w-43 bg-white shadow-lg rounded-lg overflow-hidden border border-gray-100"
+                    key={item.name}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    {dropdown.options.map((option) => (
-                      <Link
-                        key={option.name}
-                        href={option.path}
-                        className={`block px-4 py-3 transition-all duration-200 ${
-                          isActivePath(pathname, option.path)
-                            ? "text-blue-600 bg-blue-50 font-medium"
-                            : "text-gray-700 hover:bg-blue-50 hover:text-blue-500"
-                        }`}
-                        onClick={() => setActiveDropdown(null)}
-                      >
-                        <motion.div
-                          whileHover={{ x: 5 }}
-                          className="flex items-center"
-                        >
-                          <ChevronRight size={14} className="mr-2" />
-                          {option.name}
-                        </motion.div>
-                      </Link>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ))}
-          
-          <Link
-            href="/profile"
-            className={`p-2 rounded-full transition-colors duration-300 ${
-              isActivePath(pathname, "/profile")
-                ? "bg-blue-100 text-blue-600"
-                : "text-gray-700 hover:bg-blue-50 hover:text-blue-500"
-            }`}
-          >
-            <User size={24} />
-          </Link>
-        </div>
-
-        {/* Mobile Menu Button */}
-        <div className="lg:hidden flex items-center space-x-4">
-          <Link
-            href="/profile"
-            className={`p-2 rounded-full ${
-              isActivePath(pathname, "/profile") ? "text-blue-600" : "text-gray-700"
-            }`}
-          >
-            <User size={24} />
-          </Link>
-          <button
-            className="text-gray-700 focus:outline-none"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-      </div>
-
-      {/* Secondary Navbar */}
-      <div className="hidden lg:flex bg-gray-50 p-2 justify-center border-t border-gray-200">
-        {secondaryMenuItems(isAuthenticated).map((item) =>
-          item.name === "Logout" ? (
-            <button
-              key={item.name}
-              onClick={handleLogout}
-              className={`mx-3 px-3 py-1 rounded-md transition-all duration-300 ${
-                isActivePath(pathname, item.path)
-                  ? "text-blue-600 bg-blue-50 font-medium"
-                  : "text-gray-700 hover:text-blue-500 hover:bg-blue-50"
-              }`}
-            >
-              {item.name}
-            </button>
-          ) : (
-            <Link
-              key={item.name}
-              href={item.path}
-              className={`mx-3 px-3 py-1 rounded-md transition-all duration-300 ${
-                isActivePath(pathname, item.path)
-                  ? "text-blue-600 bg-blue-50 font-medium"
-                  : "text-gray-700 hover:text-blue-500 hover:bg-blue-50"
-              }`}
-            >
-              {item.name}
-            </Link>
-          )
-        )}
-      </div>
-
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ x: "-100%" }}
-            animate={{ x: "0%" }}
-            exit={{ x: "-100%" }}
-            transition={{ type: "tween", duration: 0.3 }}
-            className="lg:hidden fixed top-0 left-0 w-4/5 h-full bg-white shadow-xl flex flex-col items-start pt-20 overflow-y-auto z-50"
-          >
-            <button
-              className="absolute top-5 right-5 text-gray-700 p-2 rounded-full hover:bg-gray-100"
-              onClick={() => setIsOpen(false)}
-            >
-              <X size={24} />
-            </button>
-
-            {secondaryMenuItems(isAuthenticated).map((item) =>
-              item.name === "Logout" ? (
-                <button
-                  key={item.name}
-                  onClick={handleLogout}
-                  className={`w-full px-6 py-4 text-left border-b border-gray-100 flex items-center ${
-                    isActivePath(pathname, item.path)
-                      ? "text-blue-600 bg-blue-50 font-medium"
-                      : "text-gray-700 hover:bg-blue-50"
-                  }`}
-                >
-                  {item.name}
-                </button>
-              ) : (
-                <Link
-                  key={item.name}
-                  href={item.path}
-                  onClick={() => setIsOpen(false)}
-                  className={`w-full px-6 py-4 text-left border-b border-gray-100 flex items-center ${
-                    isActivePath(pathname, item.path)
-                      ? "text-blue-600 bg-blue-50 font-medium"
-                      : "text-gray-700 hover:bg-blue-50"
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              )
-            )}
-
-            {dropdowns.map((dropdown) => (
-              <div key={dropdown.name} className="w-full border-b border-gray-100">
-                <button
-                  onClick={() => handleDropdownClick(dropdown.name)}
-                  className={`w-full px-6 py-4 text-left flex justify-between items-center ${
-                    isDropdownActive(dropdown)
-                      ? "text-blue-600 bg-blue-50 font-medium"
-                      : "text-gray-700 hover:bg-blue-50"
-                  }`}
-                >
-                  <span>{dropdown.name}</span>
-                  <ChevronRight
-                    size={20}
-                    className={`transform transition-transform ${
-                      activeDropdown === dropdown.name ? "rotate-90" : ""
-                    }`}
-                  />
-                </button>
-                <AnimatePresence>
-                  {activeDropdown === dropdown.name && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden"
+                    <Link
+                      href={item.href}
+                      className={`relative px-3 py-2 rounded-lg text-sm font-medium flex items-center space-x-1.5 transition-all duration-200 group ${
+                        isActive
+                          ? "text-[#0057D9] dark:text-[#4D8DFF]"
+                          : "text-[#475569] dark:text-[#CBD5E1] hover:text-[#0057D9] dark:hover:text-white"
+                      }`}
                     >
-                      {dropdown.options.map((option) => (
+                      <Icon className={`w-4 h-4 ${isActive ? "text-[#0057D9] dark:text-[#4D8DFF]" : ""}`} />
+                      <span>{item.name}</span>
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeTab"
+                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0057D9] dark:bg-[#4D8DFF] rounded-full"
+                          transition={{ duration: 0.2 }}
+                        />
+                      )}
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Right Section - Profile & Auth Buttons */}
+            <div className="hidden lg:flex lg:items-center lg:space-x-3">
+              {isLoggedIn ? (
+                /* Profile Icon with Dropdown */
+                <div className="relative" ref={profileRef}>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    className={`flex items-center space-x-2 p-1.5 pr-3 rounded-xl transition-all duration-200 ${
+                      isProfileOpen
+                        ? "bg-[#F1F5F9] dark:bg-[#1E293B]"
+                        : "hover:bg-[#F1F5F9] dark:hover:bg-[#1E293B]"
+                    }`}
+                    aria-label="User Profile"
+                  >
+                    {/* Avatar */}
+                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#0057D9] to-[#003E99] flex items-center justify-center text-white font-semibold text-sm shadow-md">
+                      {userData.initials}
+                    </div>
+                    <div className="hidden xl:block text-left">
+                      <p className="text-sm font-semibold text-[#111111] dark:text-white leading-none">
+                        {userData.name}
+                      </p>
+                      <p className="text-xs text-[#64748B] dark:text-[#94A3B8] leading-none mt-1">
+                        {userData.role}
+                      </p>
+                    </div>
+                    <FiChevronDown
+                      className={`hidden xl:block w-4 h-4 text-[#94A3B8] transition-transform duration-200 ${
+                        isProfileOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </motion.button>
+
+                  {/* Profile Dropdown Menu */}
+                  <AnimatePresence>
+                    {isProfileOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute right-0 mt-2 w-72 bg-white dark:bg-[#1E293B] rounded-2xl border border-[#E2E8F0] dark:border-[#334155] shadow-xl overflow-hidden"
+                      >
+                        {/* User Info Header */}
+                        <div className="p-4 bg-gradient-to-br from-[#0057D9]/5 to-[#003E99]/5 border-b border-[#E2E8F0] dark:border-[#334155]">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0057D9] to-[#003E99] flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                              {userData.initials}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-[#111111] dark:text-white">
+                                {userData.name}
+                              </p>
+                              <p className="text-xs text-[#64748B] dark:text-[#94A3B8]">
+                                {userData.email}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-4 mt-3 pt-3 border-t border-[#E2E8F0]/50 dark:border-[#334155]/50">
+                            <div>
+                              <p className="text-[10px] text-[#94A3B8] uppercase tracking-wider">Course</p>
+                              <p className="text-xs font-medium text-[#111111] dark:text-white">{userData.course}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-[#94A3B8] uppercase tracking-wider">Roll No</p>
+                              <p className="text-xs font-medium text-[#111111] dark:text-white">{userData.rollNo}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Menu Items */}
+                        <div className="py-2">
+                          {profileMenuItems.map((item, index) => {
+                            if (item.divider) {
+                              return <div key={index} className="my-2 border-t border-[#E2E8F0] dark:border-[#334155]" />;
+                            }
+                            const Icon = item.icon;
+                            const isLogout = item.label === "Logout";
+                            
+                            return (
+                              <Link
+                                key={index}
+                                href={item.href || "#"}
+                                onClick={(e) => {
+                                  if (item.onClick === "logout") {
+                                    e.preventDefault();
+                                    handleLogout();
+                                  }
+                                  setIsProfileOpen(false);
+                                }}
+                                className={`flex items-center space-x-3 px-4 py-2.5 mx-2 rounded-xl text-sm transition-all duration-200 ${
+                                  isLogout
+                                    ? "text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
+                                    : "text-[#475569] dark:text-[#CBD5E1] hover:bg-[#F1F5F9] dark:hover:bg-[#0F172A] hover:text-[#0057D9] dark:hover:text-[#4D8DFF]"
+                                }`}
+                              >
+                                <Icon className="w-4 h-4" />
+                                <span className="font-medium">{item.label}</span>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                /* Auth Buttons when logged out */
+                <>
+                  {authItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <motion.div
+                        key={item.name}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
                         <Link
-                          key={option.name}
-                          href={option.path}
-                          onClick={() => {
-                            setIsOpen(false);
-                            setActiveDropdown(null);
-                          }}
-                          className={` px-8 py-3 text-gray-600 hover:bg-blue-50 border-t border-gray-100 flex items-center ${
-                            isActivePath(pathname, option.path)
-                              ? "text-blue-600 bg-blue-100 font-medium"
-                              : ""
+                          href={item.href}
+                          className={`flex items-center space-x-1.5 px-4 py-2 rounded-[12px] text-sm font-medium transition-all duration-200 ${
+                            item.variant === "primary"
+                              ? "bg-[#0057D9] text-white hover:bg-[#003E99] shadow-md hover:shadow-lg"
+                              : "border-2 border-[#0057D9] text-[#0057D9] hover:bg-[#0057D9] hover:text-white dark:border-[#4D8DFF] dark:text-[#4D8DFF] dark:hover:bg-[#4D8DFF] dark:hover:text-white"
                           }`}
                         >
-                          <ChevronRight size={14} className="mr-2" />
-                          {option.name}
+                          <Icon className="w-4 h-4" />
+                          <span>{item.name}</span>
                         </Link>
-                      ))}
+                      </motion.div>
+                    );
+                  })}
+                </>
+              )}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="flex lg:hidden items-center space-x-2">
+              {isLoggedIn && (
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="p-2 rounded-lg text-[#475569] dark:text-[#CBD5E1] hover:bg-[#F1F5F9] dark:hover:bg-[#334155] transition-all duration-200"
+                  aria-label="User Profile"
+                >
+                  <FiUser className="w-5 h-5" />
+                </motion.button>
+              )}
+
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsOpen(!isOpen)}
+                className="p-2 rounded-lg text-[#475569] dark:text-[#CBD5E1] hover:bg-[#F1F5F9] dark:hover:bg-[#334155] transition-all duration-200"
+                aria-label="Toggle menu"
+              >
+                {isOpen ? (
+                  <FiX className="w-6 h-6" />
+                ) : (
+                  <FiMenu className="w-6 h-6" />
+                )}
+              </motion.button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="lg:hidden bg-white dark:bg-[#0F172A] border-b border-[#E2E8F0] dark:border-[#475569] shadow-lg overflow-hidden"
+            >
+              <div className="px-4 py-4 space-y-2">
+                {/* Mobile User Info - if logged in */}
+                {isLoggedIn && (
+                  <div className="p-3 mb-3 bg-gradient-to-br from-[#0057D9]/5 to-[#003E99]/5 rounded-2xl border border-[#E2E8F0] dark:border-[#334155]">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0057D9] to-[#003E99] flex items-center justify-center text-white font-bold text-sm">
+                        {userData.initials}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm text-[#111111] dark:text-white">
+                          {userData.name}
+                        </p>
+                        <p className="text-xs text-[#64748B] dark:text-[#94A3B8]">
+                          {userData.role} • {userData.rollNo}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {navItems.map((item, index) => {
+                  const isActive = pathname === item.href;
+                  const Icon = item.icon;
+                  
+                  return (
+                    <motion.div
+                      key={item.name}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1, duration: 0.3 }}
+                    >
+                      <Link
+                        href={item.href}
+                        className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                          isActive
+                            ? "bg-[#0057D9] bg-opacity-10 text-[#F5F5DC] dark:bg-[#4D8DFF] dark:bg-opacity-10 dark:text-[#4D8DFF]"
+                            : "text-[#475569] dark:text-[#CBD5E1] hover:bg-[#F1F5F9] dark:hover:bg-[#334155] hover:text-[#0057D9] dark:hover:text-white"
+                        }`}
+                      >
+                        <Icon className="w-5 h-5" />
+                        <span className="font-medium">{item.name}</span>
+                      </Link>
                     </motion.div>
+                  );
+                })}
+                
+                <div className="border-t border-[#E2E8F0] dark:border-[#475569] pt-3 mt-3 space-y-2">
+                  {isLoggedIn ? (
+                    <>
+                      {profileMenuItems.map((item, index) => {
+                        if (item.divider) return null;
+                        const Icon = item.icon;
+                        const isLogout = item.label === "Logout";
+                        
+                        return (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: (navItems.length + index) * 0.1, duration: 0.3 }}
+                          >
+                            <Link
+                              href={item.href || "#"}
+                              onClick={(e) => {
+                                if (item.onClick === "logout") {
+                                  e.preventDefault();
+                                  handleLogout();
+                                }
+                                setIsOpen(false);
+                              }}
+                              className={`flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                                isLogout
+                                  ? "text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
+                                  : "text-[#475569] dark:text-[#CBD5E1] hover:bg-[#F1F5F9] dark:hover:bg-[#334155]"
+                              }`}
+                            >
+                              <Icon className="w-5 h-5" />
+                              <span>{item.label}</span>
+                            </Link>
+                          </motion.div>
+                        );
+                      })}
+                    </>
+                  ) : (
+                    authItems.map((item, index) => {
+                      const Icon = item.icon;
+                      return (
+                        <motion.div
+                          key={item.name}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: (navItems.length + index) * 0.1, duration: 0.3 }}
+                        >
+                          <Link
+                            href={item.href}
+                            className={`flex items-center justify-center space-x-2 px-4 py-3 rounded-[12px] font-medium transition-all duration-200 ${
+                              item.variant === "primary"
+                                ? "bg-[#0057D9] text-white hover:bg-[#003E99]"
+                                : "border-2 border-[#0057D9] text-[#0057D9] hover:bg-[#0057D9] hover:text-white dark:border-[#4D8DFF] dark:text-[#4D8DFF] dark:hover:bg-[#4D8DFF] dark:hover:text-white"
+                            }`}
+                          >
+                            <Icon className="w-5 h-5" />
+                            <span>{item.name}</span>
+                          </Link>
+                        </motion.div>
+                      );
+                    })
                   )}
-                </AnimatePresence>
+                </div>
               </div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.nav>
+
+      {/* Spacer to prevent content from going under navbar */}
+      <div style={{ height: "72px" }} />
+    </>
   );
 };
 
