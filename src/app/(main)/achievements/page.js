@@ -1,7 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiChevronLeft, FiChevronRight, FiFilter, FiSearch, FiCalendar, FiUser, FiAward, FiClock } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiSearch, FiCalendar, FiUser, FiAward } from 'react-icons/fi';
+import { Award, GraduationCap, Trophy, Star } from 'lucide-react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 
@@ -14,10 +15,8 @@ const AchievementsPage = () => {
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState(-1);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterOpen, setFilterOpen] = useState(false);
-  // Image sizing state
-  const [imageWidth, setImageWidth] = useState(800);
-  const [imageHeight, setImageHeight] = useState(600);
+  const [imageWidth] = useState(800);
+  const [imageHeight] = useState(600);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -72,118 +71,138 @@ const AchievementsPage = () => {
     setPage(1);
   };
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
+        staggerChildren: 0.08
       }
     }
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: { y: 16, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
       transition: {
-        type: "spring",
-        stiffness: 100
+        duration: 0.4,
+        ease: "easeOut"
       }
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#eff5ff] text-gray-800 py-12 px-4 sm:px-6 pt-15 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, type: "spring" }}
-          className="text-center mb-12"
-        >
-           <motion.h1 
-        className="text-center text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-10"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        Achievements
-      </motion.h1>
+    <div className="min-h-screen bg-gradient-to-br from-[#f0f4f8] via-[#f8fafc] to-[#e2e8f0]">
+      {/* Hero Section */}
+      <div className="relative bg-white/80 backdrop-blur-sm border-b border-gray-200">
+        {/* Subtle pattern overlay */}
+        <div 
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, #6366f1 1px, transparent 0)`,
+            backgroundSize: '40px 40px',
+          }}
+        />
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+          <motion.div 
+            className="text-center max-w-3xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center px-4 py-1.5 bg-indigo-50 border border-indigo-100 rounded-full mb-6"
+            >
+              <Trophy className="w-4 h-4 text-indigo-600 mr-2" />
+              <span className="text-sm font-medium text-indigo-700">Excellence Recognized</span>
+            </motion.div>
 
-        </motion.div>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 tracking-tight">
+              Student
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600"> Achievements</span>
+            </h1>
+            <p className="text-lg sm:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto">
+              Celebrating outstanding accomplishments and milestones of our talented students
+            </p>
+          </motion.div>
+        </div>
+      </div>
 
-        {/* Search and Filter */}
+      {/* Controls Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="mb-8"
+          transition={{ delay: 0.1, duration: 0.45 }}
         >
-          <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-            <form onSubmit={handleSearch} className="w-full md:w-1/2">
-              <motion.div 
-                className="relative"
-                whileFocus={{ scale: 1.01 }}
-              >
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiSearch className="text-indigo-500" />
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white rounded-2xl border border-gray-100 p-5 shadow-sm backdrop-blur-sm">
+            
+            {/* Search */}
+            <form onSubmit={handleSearch} className="w-full md:max-w-md">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <FiSearch className="text-gray-400 text-[17px]" />
                 </div>
                 <input
                   type="text"
                   placeholder="Search achievements..."
-                  className="w-full pl-10 pr-4 py-2 bg-white border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-800 placeholder-indigo-300 shadow-sm transition-all"
+                  className="w-full pl-12 pr-4 py-3 bg-gray-50/80 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-              </motion.div>
+              </div>
             </form>
 
-            <div className="flex gap-3 w-full md:w-auto">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+            {/* Sort */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500 mr-1 hidden sm:inline font-medium">Sort by:</span>
+              
+              <button
                 onClick={() => handleSort('date')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all shadow-sm ${
+                className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   sortBy === 'date' 
-                    ? 'bg-[#007ED9] text-white shadow-md' 
-                    : 'bg-white text-[#007ED9] hover:bg-indigo-50 border border-indigo-200'
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' 
+                    : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
                 }`}
               >
-                <FiCalendar />
-                <span>Date</span>
+                <FiCalendar className="text-[15px]" />
+                Date
                 {sortBy === 'date' && (
-                  <span>{sortOrder === -1 ? '↓' : '↑'}</span>
+                  <span className="text-xs ml-0.5 opacity-90">{sortOrder === -1 ? '↓' : '↑'}</span>
                 )}
-              </motion.button>
+              </button>
 
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <button
                 onClick={() => handleSort('studentName')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all shadow-sm ${
+                className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   sortBy === 'studentName' 
-                    ? 'bg-[#007ED9] text-white shadow-md' 
-                    : 'bg-white text-[#007ED9] hover:bg-indigo-50 border border-indigo-200'
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' 
+                    : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
                 }`}
               >
-                <FiUser />
-                <span>Name</span>
+                <FiUser className="text-[15px]" />
+                Name
                 {sortBy === 'studentName' && (
-                  <span>{sortOrder === -1 ? '↓' : '↑'}</span>
+                  <span className="text-xs ml-0.5 opacity-90">{sortOrder === -1 ? '↓' : '↑'}</span>
                 )}
-              </motion.button>
+              </button>
             </div>
           </div>
         </motion.div>
+      </div>
 
-        {/* Achievements Grid */}
+      {/* Achievements Grid */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         {loading ? (
           <motion.div 
-            className="grid grid-cols-1 gap-8"
+            className="space-y-6"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -192,29 +211,25 @@ const AchievementsPage = () => {
               <motion.div
                 key={i}
                 variants={itemVariants}
-                className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all"
+                className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm"
               >
                 <div className="flex flex-col md:flex-row">
                   <div 
-                    className="flex-shrink-0 w-full md:w-auto" 
+                    className="flex-shrink-0 w-full md:w-auto bg-gray-100" 
                     style={{ 
                       width: isMobile ? '100%' : `${imageWidth}px`, 
-                      height: isMobile ? '300px' : `${imageHeight}px` 
+                      height: isMobile ? '260px' : `${imageHeight}px` 
                     }}
                   >
                     <Skeleton 
-                      height={isMobile ? 300 : imageHeight} 
+                      height={isMobile ? 260 : imageHeight} 
                       width={isMobile ? '100%' : imageWidth} 
-                      baseColor="#e6edff"
-                      highlightColor="#f8faff"
+                      baseColor="#e2e8f0"
+                      highlightColor="#f1f5f9"
                     />
                   </div>
-                  <div className="flex-1 p-6">
-                    <Skeleton 
-                      count={4} 
-                      baseColor="#e6edff"
-                      highlightColor="#f8faff"
-                    />
+                  <div className="flex-1 p-6 md:p-8">
+                    <Skeleton count={4} baseColor="#e2e8f0" highlightColor="#f1f5f9" className="mb-3" />
                   </div>
                 </div>
               </motion.div>
@@ -222,7 +237,7 @@ const AchievementsPage = () => {
           </motion.div>
         ) : achievements.length > 0 ? (
           <motion.div 
-            className="grid grid-cols-1 gap-8"
+            className="space-y-6"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -232,83 +247,63 @@ const AchievementsPage = () => {
                 <motion.div
                   key={achievement._id}
                   variants={itemVariants}
-                  whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                  className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all border border-indigo-100 hover:border-indigo-300"
+                  className="group bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl hover:border-gray-200 transition-all duration-300"
                 >
                   <div className="flex flex-col md:flex-row">
-                    {/* Photo Section - Customizable Size */}
-                    <motion.div 
-                      className="relative group overflow-hidden flex-shrink-0 w-full md:w-auto" 
+                    
+                    {/* Image */}
+                    <div 
+                      className="relative overflow-hidden flex-shrink-0 w-full md:w-auto bg-gray-100" 
                       style={{ 
                         width: isMobile ? '100%' : `${imageWidth}px`, 
-                        height: isMobile ? '300px' : `${imageHeight}px` 
+                        height: isMobile ? '260px' : `${imageHeight}px` 
                       }}
-                      whileHover={{ scale: 1.02 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
                     >
                       <img
                         src={achievement.photo.url}
                         alt={achievement.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                         style={{ 
                           width: isMobile ? '100%' : `${imageWidth}px`, 
-                          height: isMobile ? '300px' : `${imageHeight}px` 
+                          height: isMobile ? '260px' : `${imageHeight}px` 
                         }}
-                        className="object-cover transition-transform duration-500 group-hover:scale-110"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/10 to-transparent" />
-                    </motion.div>
+                      {/* Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </div>
 
-                    {/* Details Section */}
-                    <div className="flex-1 p-6">
-                      <div className="flex flex-col h-full">
-                        <div className="mb-4">
-                          <motion.div 
-                            className="flex items-center gap-2 text-indigo-600 mb-2"
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.2 }}
-                          >
-                            <FiAward className="text-lg" />
-                            <span className="text-sm font-medium">ACHIEVEMENT</span>
-                          </motion.div>
-                          <motion.h2 
-                            className="text-2xl font-bold text-indigo-800 mb-2"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3 }}
-                          >
-                            {achievement.title}
-                          </motion.h2>
-                          <motion.p 
-                            className="text-gray-700 mb-4"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.4 }}
-                          >
-                            {achievement.description}
-                          </motion.p>
+                    {/* Details */}
+                    <div className="flex-1 p-6 md:p-8 flex flex-col">
+                      <div className="mb-6">
+                        <div className="inline-flex items-center gap-1.5 text-indigo-600 text-xs font-semibold tracking-wide uppercase mb-3 bg-indigo-50 px-3 py-1.5 rounded-full">
+                          <FiAward className="text-sm" />
+                          Achievement
                         </div>
 
-                        <div className="mt-auto pt-4 border-t border-indigo-100">
-                          <div className="flex flex-wrap gap-4">
-                            <motion.div 
-                              className="flex items-center gap-2 text-indigo-700"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ delay: 0.5 }}
-                            >
-                              <FiUser className="text-indigo-600" />
-                              <span>{achievement.studentName}</span>
-                            </motion.div>
-                            <motion.div 
-                              className="flex items-center gap-2 text-indigo-700"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ delay: 0.6 }}
-                            >
-                              <FiCalendar className="text-indigo-600" />
-                              <span>{formatDate(achievement.date)}</span>
-                            </motion.div>
+                        <h2 className="text-xl md:text-2xl font-semibold text-gray-900 leading-snug mb-3 group-hover:text-indigo-600 transition-colors">
+                          {achievement.title}
+                        </h2>
+
+                        <p className="text-gray-600 text-[15px] leading-relaxed">
+                          {achievement.description}
+                        </p>
+                      </div>
+
+                      {/* Meta information */}
+                      <div className="mt-auto pt-5 border-t border-gray-100">
+                        <div className="flex flex-wrap gap-x-8 gap-y-3">
+                          <div className="flex items-center gap-2.5 text-sm">
+                            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                              <FiUser className="text-indigo-600 text-[15px]" />
+                            </div>
+                            <span className="text-gray-700 font-medium">{achievement.studentName}</span>
+                          </div>
+
+                          <div className="flex items-center gap-2.5 text-sm">
+                            <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+                              <FiCalendar className="text-purple-600 text-[15px]" />
+                            </div>
+                            <span className="text-gray-700">{formatDate(achievement.date)}</span>
                           </div>
                         </div>
                       </div>
@@ -320,22 +315,15 @@ const AchievementsPage = () => {
           </motion.div>
         ) : (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-16"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-24"
           >
-            <motion.div 
-              className="text-indigo-500 text-5xl mb-4"
-              animate={{ 
-                rotate: [0, 5, -5, 0],
-                scale: [1, 1.1, 1]
-              }}
-              transition={{ repeat: Infinity, duration: 2 }}
-            >
-              🏆
-            </motion.div>
-            <h3 className="text-xl font-medium text-[#007DDA] mb-2">No achievements found</h3>
-            <p className="text-[#007DDA]">
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-indigo-50 rounded-3xl mb-6">
+              <Trophy className="w-12 h-12 text-indigo-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">No achievements found</h3>
+            <p className="text-gray-500 text-sm">
               {searchQuery
                 ? 'Try adjusting your search query'
                 : 'Check back later for new achievements'}
@@ -346,21 +334,19 @@ const AchievementsPage = () => {
         {/* Pagination */}
         {totalPages > 1 && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
             className="flex justify-center mt-12"
           >
-            <nav className="flex items-center gap-2">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+            <nav className="inline-flex items-center gap-1.5 bg-white border border-gray-200 rounded-2xl p-2 shadow-sm">
+              <button
                 onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                 disabled={page === 1}
-                className="p-2 rounded-md bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                className="p-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
-                <FiChevronLeft />
-              </motion.button>
+                <FiChevronLeft size={18} />
+              </button>
 
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 let pageNum;
@@ -375,53 +361,72 @@ const AchievementsPage = () => {
                 }
 
                 return (
-                  <motion.button
+                  <button
                     key={pageNum}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
                     onClick={() => setPage(pageNum)}
-                    className={`w-10 h-10 rounded-md flex items-center justify-center transition-all shadow-sm ${
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-medium transition-all ${
                       page === pageNum
-                        ? 'bg-indigo-600 text-white shadow-md'
-                        : 'bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-50'
+                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
+                        : 'text-gray-600 hover:bg-gray-50'
                     }`}
                   >
                     {pageNum}
-                  </motion.button>
+                  </button>
                 );
               })}
 
               {totalPages > 5 && page < totalPages - 2 && (
-                <span className="text-indigo-500 px-2">...</span>
+                <span className="px-1 text-gray-400 text-sm">…</span>
               )}
 
               {totalPages > 5 && page < totalPages - 2 && (
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                <button
                   onClick={() => setPage(totalPages)}
-                  className={`w-10 h-10 rounded-md flex items-center justify-center transition-all shadow-sm ${
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-medium transition-all ${
                     page === totalPages
-                      ? 'bg-indigo-600 text-white shadow-md'
-                      : 'bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-50'
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
+                      : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
                   {totalPages}
-                </motion.button>
+                </button>
               )}
 
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+              <button
                 onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
                 disabled={page === totalPages}
-                className="p-2 rounded-md bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                className="p-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
-                <FiChevronRight />
-              </motion.button>
+                <FiChevronRight size={18} />
+              </button>
             </nav>
           </motion.div>
         )}
+      </div>
+
+      {/* Bottom CTA */}
+      <div className="bg-gradient-to-br from-gray-900 to-indigo-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+          <div className="text-center max-w-2xl mx-auto">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-2xl mb-6 backdrop-blur-sm">
+              <GraduationCap className="w-8 h-8 text-indigo-400" />
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+              Become Our Next Success Story
+            </h2>
+            <p className="text-indigo-200 text-lg mb-8">
+              Join our community of high achievers and create your own legacy of excellence.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button className="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-colors duration-200 shadow-lg shadow-indigo-600/25">
+                View All Achievements
+              </button>
+              <button className="w-full sm:w-auto px-8 py-3.5 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl transition-colors duration-200 backdrop-blur-sm border border-white/10">
+                Share Your Achievement
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

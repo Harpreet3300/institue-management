@@ -1,3 +1,4 @@
+// app/api/auth/login/route.js
 import jwt from 'jsonwebtoken';
 import connectDB from '@/src/lib/DBconnection';
 import Student from '@/src/models/student';
@@ -14,7 +15,8 @@ export async function POST(req) {
       });
     }
 
-    const student = await Student.findOne({ email });
+    // Added .select('+password') to ensure password field is included
+    const student = await Student.findOne({ email }).select('+password');
     if (!student) {
       return new Response(JSON.stringify({ message: 'Invalid email or password' }), {
         status: 401,
@@ -36,6 +38,7 @@ export async function POST(req) {
       { expiresIn: '30d' }
     );
 
+    // Convert to plain object and remove password
     const studentResponse = student.toObject();
     delete studentResponse.password;
 
@@ -51,6 +54,7 @@ export async function POST(req) {
       }
     );
   } catch (error) {
+    console.error('Login error:', error);
     return new Response(JSON.stringify({ message: error.message || 'Login failed' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

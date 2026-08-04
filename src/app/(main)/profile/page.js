@@ -58,17 +58,6 @@ import {
   FaMedal,
   FaCertificate,
 } from "react-icons/fa";
-import {
-  SiJavascript,
-  SiNextdotjs,
-  SiMongodb,
-  SiGithub,
-  SiReact,
-  SiTailwindcss,
-  SiNodedotjs,
-  SiPython,
-  SiGit,
-} from "react-icons/si";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -91,144 +80,35 @@ export default function ProfilePage() {
     setError("");
 
     try {
-      // Get data from localStorage
-      const token = localStorage.getItem("edumanage_token");
-      const userData = localStorage.getItem("edumanage_user");
-      const tokenExpiry = localStorage.getItem("edumanage_token_expiry");
+      // Get data from localStorage - matching your login API response structure
+      const token = localStorage.getItem("token");
+      const studentStr = localStorage.getItem("student"); // Changed from studentData to student
 
-      // Check if token exists and is valid
-      if (!token || !userData) {
+      // Check if token and student data exist
+      if (!token || !studentStr) {
         setError("No authentication data found. Please login again.");
         setIsLoading(false);
-        // Redirect to login after 2 seconds
         setTimeout(() => {
           router.push("/login");
         }, 2000);
         return;
       }
 
-      // Check token expiry
-      if (tokenExpiry) {
-        const expiryDate = new Date(tokenExpiry);
-        if (expiryDate < new Date()) {
-          // Token expired, clear storage and redirect
-          localStorage.removeItem("edumanage_token");
-          localStorage.removeItem("edumanage_user");
-          localStorage.removeItem("edumanage_token_expiry");
-          localStorage.removeItem("edumanage_refresh_token");
-          
-          setError("Session expired. Please login again.");
-          setIsLoading(false);
-          setTimeout(() => {
-            router.push("/login");
-          }, 2000);
-          return;
-        }
-      }
+      // Parse student data from localStorage
+      const parsedStudentData = JSON.parse(studentStr);
 
-      // Parse user data from localStorage
-      const parsedUserData = JSON.parse(userData);
-
-      if (!parsedUserData || !parsedUserData.email) {
-        setError("Invalid user data. Please login again.");
+      if (!parsedStudentData || !parsedStudentData.email) {
+        setError("Invalid student data. Please login again.");
         setIsLoading(false);
         return;
       }
 
-      // Build complete student data from localStorage user data
-      const data = {
-        personal: {
-          firstName: parsedUserData.firstName || "",
-          lastName: parsedUserData.lastName || "",
-          fullName: parsedUserData.fullName || `${parsedUserData.firstName || ""} ${parsedUserData.lastName || ""}`.trim(),
-          email: parsedUserData.email || "",
-          phone: parsedUserData.phone || "",
-          dob: parsedUserData.dob || "",
-          gender: parsedUserData.gender || "",
-          bloodGroup: parsedUserData.bloodGroup || "",
-          address: parsedUserData.address || "",
-          avatar: parsedUserData.avatar || null,
-          initials: parsedUserData.initials || `${parsedUserData.firstName?.[0] || ""}${parsedUserData.lastName?.[0] || ""}`,
-          bio: parsedUserData.bio || "Student at EduManage Institute",
-          socialLinks: {
-            github: parsedUserData.socialLinks?.github || "",
-            linkedin: parsedUserData.socialLinks?.linkedin || "",
-            portfolio: parsedUserData.socialLinks?.portfolio || "",
-          },
-        },
-        academic: {
-          rollNo: parsedUserData.rollNo || "",
-          registrationNo: parsedUserData.registrationNo || "",
-          course: parsedUserData.course || "",
-          semester: parsedUserData.semester || "",
-          batch: parsedUserData.batch || "",
-          section: parsedUserData.section || "",
-          department: parsedUserData.department || "",
-          college: parsedUserData.college || "",
-          university: parsedUserData.university || "",
-          enrollmentDate: parsedUserData.enrollmentDate || "",
-          expectedGraduation: parsedUserData.expectedGraduation || "",
-          cgpa: parsedUserData.cgpa || 0,
-          sgpa: parsedUserData.sgpa || {},
-          attendance: parsedUserData.attendance || 0,
-          totalCredits: parsedUserData.totalCredits || 0,
-          completedCredits: parsedUserData.completedCredits || 0,
-        },
-        skills: parsedUserData.skills || [],
-        subjects: parsedUserData.subjects || [],
-        achievements: parsedUserData.achievements || [],
-        activities: parsedUserData.activities || [],
-        feeDetails: parsedUserData.feeDetails || {
-          totalFees: 0,
-          paidAmount: 0,
-          dueAmount: 0,
-          lastPaymentDate: "",
-          nextDueDate: "",
-          paymentHistory: [],
-        },
-      };
-
-      // Add icon references to skills if not present
-      const skillIcons = {
-        "HTML5": FiCode,
-        "CSS3": FiCode,
-        "JavaScript": SiJavascript,
-        "React.js": SiReact,
-        "Next.js": SiNextdotjs,
-        "Node.js": SiNodedotjs,
-        "MongoDB": SiMongodb,
-        "Tailwind CSS": SiTailwindcss,
-        "Git & GitHub": SiGit,
-        "Python": SiPython,
-      };
-
-      data.skills = data.skills.map(skill => ({
-        ...skill,
-        icon: skill.icon || skillIcons[skill.name] || FiCode,
-        category: skill.category || "Other",
-      }));
-
-      // Add icons to achievements if not present
-      data.achievements = data.achievements.map(achievement => ({
-        ...achievement,
-        icon: achievement.icon || FiAward,
-        color: achievement.color || "from-blue-500 to-blue-600",
-        description: achievement.description || "",
-      }));
-
-      // Add icons and types to activities if not present
-      data.activities = data.activities.map(activity => ({
-        ...activity,
-        icon: activity.icon || FiActivity,
-        type: activity.type || "academic",
-      }));
-
-      setStudentData(data);
-      setEditedData(JSON.parse(JSON.stringify(data)));
+      setStudentData(parsedStudentData);
+      setEditedData({ ...parsedStudentData });
       
       // Set profile image if exists
-      if (parsedUserData.avatar) {
-        setProfileImage(parsedUserData.avatar);
+      if (parsedStudentData.profileImage?.url) {
+        setProfileImage(parsedStudentData.profileImage.url);
       }
 
       setIsLoading(false);
@@ -243,24 +123,26 @@ export default function ProfilePage() {
   const handleSave = async () => {
     try {
       // Update localStorage with edited data
-      const updatedUserData = {
-        ...JSON.parse(localStorage.getItem("edumanage_user")),
-        firstName: editedData.personal.firstName,
-        lastName: editedData.personal.lastName,
-        fullName: `${editedData.personal.firstName} ${editedData.personal.lastName}`.trim(),
-        email: editedData.personal.email,
-        phone: editedData.personal.phone,
-        dob: editedData.personal.dob,
-        gender: editedData.personal.gender,
-        bloodGroup: editedData.personal.bloodGroup,
-        address: editedData.personal.address,
-        bio: editedData.personal.bio,
-        avatar: profileImage || editedData.personal.avatar,
-        initials: `${editedData.personal.firstName?.[0] || ""}${editedData.personal.lastName?.[0] || ""}`,
+      const updatedStudentData = {
+        ...JSON.parse(localStorage.getItem("student")),
+        name: editedData.name,
+        fathername: editedData.fathername,
+        mothername: editedData.mothername,
+        email: editedData.email,
+        phoneNumber: editedData.phoneNumber,
+        gender: editedData.gender,
+        dateOfBirth: editedData.dateOfBirth,
+        address: editedData.address,
+        course: editedData.course,
+        courseDuration: editedData.courseDuration,
+        profileImage: {
+          url: profileImage || editedData.profileImage?.url || "",
+          publicId: editedData.profileImage?.publicId || "",
+        },
       };
 
       // Save to localStorage
-      localStorage.setItem("edumanage_user", JSON.stringify(updatedUserData));
+      localStorage.setItem("student", JSON.stringify(updatedStudentData));
 
       // Update state
       setStudentData(editedData);
@@ -270,8 +152,24 @@ export default function ProfilePage() {
       // Clear success message after 3 seconds
       setTimeout(() => setSaveMessage(""), 3000);
 
-      // Optionally, you can also send the updated data to your backend API
-      // await updateProfileAPI(updatedUserData);
+      // Optional: Send update to backend API
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch('/api/student/update-profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(updatedStudentData)
+        });
+        
+        if (!response.ok) {
+          console.error("Failed to sync with server");
+        }
+      } catch (apiError) {
+        console.error("API sync error:", apiError);
+      }
 
     } catch (err) {
       console.error("Error saving profile:", err);
@@ -294,16 +192,14 @@ export default function ProfilePage() {
         const imageData = reader.result;
         setProfileImage(imageData);
         
-        // Update localStorage with avatar
-        try {
-          const userData = JSON.parse(localStorage.getItem("edumanage_user"));
-          if (userData) {
-            userData.avatar = imageData;
-            localStorage.setItem("edumanage_user", JSON.stringify(userData));
+        // Update editedData state
+        setEditedData(prev => ({
+          ...prev,
+          profileImage: {
+            ...prev.profileImage,
+            url: imageData
           }
-        } catch (err) {
-          console.error("Error saving avatar to localStorage:", err);
-        }
+        }));
       };
       reader.readAsDataURL(file);
     }
@@ -311,24 +207,35 @@ export default function ProfilePage() {
 
   const handleLogout = () => {
     // Clear all auth data from localStorage
-    localStorage.removeItem("edumanage_token");
-    localStorage.removeItem("edumanage_user");
-    localStorage.removeItem("edumanage_token_expiry");
-    localStorage.removeItem("edumanage_refresh_token");
-    localStorage.removeItem("edumanage_remember_me");
+    localStorage.removeItem("token");
+    localStorage.removeItem("student");
     
     // Redirect to login page
     router.push("/login");
   };
 
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return "Not provided";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  // Get initials for avatar
+  const getInitials = (name) => {
+    if (!name) return "ST";
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
   const tabs = [
     { id: "overview", label: "Overview", icon: FiGrid },
     { id: "academic", label: "Academic", icon: FaGraduationCap },
-    { id: "skills", label: "Skills", icon: FiZap },
-    { id: "subjects", label: "Subjects", icon: FiBookOpen },
-    { id: "achievements", label: "Achievements", icon: FiAward },
-    { id: "fees", label: "Fee Details", icon: FiCreditCard },
-    { id: "activity", label: "Activity", icon: FiActivity },
+    { id: "family", label: "Family", icon: FiUsers },
+    { id: "contact", label: "Contact", icon: FiPhone },
   ];
 
   const containerVariants = {
@@ -348,27 +255,6 @@ export default function ProfilePage() {
     },
   };
 
-  const getGradeColor = (grade) => {
-    const colors = {
-      "A+": "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400 border-green-200 dark:border-green-500/30",
-      "A": "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30",
-      "A-": "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 border-blue-200 dark:border-blue-500/30",
-      "B+": "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400 border-yellow-200 dark:border-yellow-500/30",
-      "B": "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400 border-orange-200 dark:border-orange-500/30",
-    };
-    return colors[grade] || "bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400 border-gray-200 dark:border-gray-500/30";
-  };
-
-  const getActivityColor = (type) => {
-    const colors = {
-      academic: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
-      event: "bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400",
-      course: "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400",
-      project: "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400",
-    };
-    return colors[type] || "bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400";
-  };
-
   // Loading State
   if (isLoading) {
     return (
@@ -380,7 +266,7 @@ export default function ProfilePage() {
             className="w-16 h-16 border-4 border-[#0057D9]/20 border-t-[#0057D9] rounded-full mx-auto mb-6"
           />
           <h2 className="text-xl font-semibold text-[#111111] dark:text-white mb-2">Loading Profile</h2>
-          <p className="text-[#64748B] dark:text-[#94A3B8]">Fetching your information from local storage...</p>
+          <p className="text-[#64748B] dark:text-[#94A3B8]">Fetching your information...</p>
         </div>
       </div>
     );
@@ -483,14 +369,14 @@ export default function ProfilePage() {
               {/* Avatar with Upload */}
               <div className="relative group">
                 <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-[#0057D9] to-[#003E99] flex items-center justify-center text-white font-bold text-5xl shadow-2xl shadow-[#0057D9]/30 border-4 border-white/10 overflow-hidden">
-                  {profileImage || studentData.personal.avatar ? (
+                  {profileImage || studentData.profileImage?.url ? (
                     <img 
-                      src={profileImage || studentData.personal.avatar} 
+                      src={profileImage || studentData.profileImage.url} 
                       alt="Profile" 
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    studentData.personal.initials || "ST"
+                    getInitials(studentData.name)
                   )}
                 </div>
                 <label className="absolute -bottom-2 -right-2 w-10 h-10 bg-[#0057D9] hover:bg-[#003E99] rounded-xl flex items-center justify-center cursor-pointer transition-all duration-200 shadow-lg border-2 border-white/20 opacity-0 group-hover:opacity-100">
@@ -505,65 +391,38 @@ export default function ProfilePage() {
                 <div className="flex flex-col md:flex-row md:items-center gap-4 mb-2">
                   <h1 className="text-3xl sm:text-4xl font-bold">
                     {isEditing ? (
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={editedData.personal?.firstName || ""}
-                          onChange={(e) => setEditedData({
-                            ...editedData,
-                            personal: { ...editedData.personal, firstName: e.target.value }
-                          })}
-                          className="bg-white/10 border border-white/20 rounded-lg px-3 py-1 text-white w-40"
-                          placeholder="First Name"
-                        />
-                        <input
-                          type="text"
-                          value={editedData.personal?.lastName || ""}
-                          onChange={(e) => setEditedData({
-                            ...editedData,
-                            personal: { ...editedData.personal, lastName: e.target.value }
-                          })}
-                          className="bg-white/10 border border-white/20 rounded-lg px-3 py-1 text-white w-40"
-                          placeholder="Last Name"
-                        />
-                      </div>
+                      <input
+                        type="text"
+                        value={editedData.name || ""}
+                        onChange={(e) => setEditedData({
+                          ...editedData,
+                          name: e.target.value
+                        })}
+                        className="bg-white/10 border border-white/20 rounded-lg px-3 py-1 text-white w-full md:w-64"
+                        placeholder="Full Name"
+                      />
                     ) : (
-                      studentData.personal.fullName || `${studentData.personal.firstName} ${studentData.personal.lastName}`
+                      studentData.name
                     )}
                   </h1>
                   <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-medium inline-flex items-center w-fit mx-auto md:mx-0 border border-green-500/30">
                     <FiCheckCircle className="w-3 h-3 mr-1" />
-                    Active Student
+                    {studentData.role === 'student' ? 'Active Student' : studentData.role}
                   </span>
                 </div>
-                
-                {isEditing ? (
-                  <textarea
-                    value={editedData.personal?.bio || ""}
-                    onChange={(e) => setEditedData({
-                      ...editedData,
-                      personal: { ...editedData.personal, bio: e.target.value }
-                    })}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm mb-3 resize-none"
-                    rows={2}
-                    placeholder="Your bio..."
-                  />
-                ) : (
-                  <p className="text-[#CBD5E1] mb-3">{studentData.personal.bio}</p>
-                )}
                 
                 <div className="flex flex-wrap items-center gap-4 text-sm text-[#94A3B8] justify-center md:justify-start">
                   <span className="flex items-center">
                     <FiHash className="w-4 h-4 mr-1" />
-                    {studentData.academic.rollNo}
+                    Roll No: {studentData.rollNo}
                   </span>
                   <span className="flex items-center">
                     <FaGraduationCap className="w-4 h-4 mr-1" />
-                    {studentData.academic.semester}
+                    {studentData.course}
                   </span>
                   <span className="flex items-center">
-                    <FaUniversity className="w-4 h-4 mr-1" />
-                    {studentData.academic.college}
+                    <FiClock className="w-4 h-4 mr-1" />
+                    {studentData.courseDuration}
                   </span>
                 </div>
               </div>
@@ -586,7 +445,7 @@ export default function ProfilePage() {
                       whileTap={{ scale: 0.95 }}
                       onClick={() => {
                         setIsEditing(false);
-                        setEditedData(JSON.parse(JSON.stringify(studentData)));
+                        setEditedData({ ...studentData });
                       }}
                       className="p-2.5 bg-red-500/20 hover:bg-red-500/30 rounded-xl transition-all duration-200"
                     >
@@ -616,31 +475,6 @@ export default function ProfilePage() {
                   </>
                 )}
               </div>
-            </div>
-
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[
-                { icon: FiStar, label: "CGPA", value: studentData.academic.cgpa || "N/A", color: "text-yellow-400", bgColor: "bg-yellow-500/10" },
-                { icon: FiTrendingUp, label: "Attendance", value: studentData.academic.attendance ? `${studentData.academic.attendance}%` : "N/A", color: "text-green-400", bgColor: "bg-green-500/10" },
-                { icon: FiBookOpen, label: "Credits", value: studentData.academic.totalCredits ? `${studentData.academic.completedCredits}/${studentData.academic.totalCredits}` : "N/A", color: "text-blue-400", bgColor: "bg-blue-500/10" },
-                { icon: FiAward, label: "Achievements", value: studentData.achievements?.length || 0, color: "text-purple-400", bgColor: "bg-purple-500/10" },
-              ].map((stat, index) => {
-                const Icon = stat.icon;
-                return (
-                  <motion.div
-                    key={index}
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    className="bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur-sm text-center hover:bg-white/10 transition-all duration-200"
-                  >
-                    <div className={`w-10 h-10 ${stat.bgColor} rounded-lg flex items-center justify-center mx-auto mb-2`}>
-                      <Icon className={`w-5 h-5 ${stat.color}`} />
-                    </div>
-                    <div className="text-2xl font-bold text-white">{stat.value}</div>
-                    <div className="text-xs text-[#94A3B8]">{stat.label}</div>
-                  </motion.div>
-                );
-              })}
             </div>
           </motion.div>
         </div>
@@ -696,12 +530,12 @@ export default function ProfilePage() {
                       </div>
                       <div className="p-6 space-y-4">
                         {[
-                          { icon: FiMail, label: "Email", value: studentData.personal.email },
-                          { icon: FiPhone, label: "Phone", value: studentData.personal.phone || "Not provided" },
-                          { icon: FiCalendar, label: "Date of Birth", value: studentData.personal.dob || "Not provided" },
-                          { icon: FiUser, label: "Gender", value: studentData.personal.gender || "Not provided" },
-                          { icon: FiHeart, label: "Blood Group", value: studentData.personal.bloodGroup || "Not provided" },
-                          { icon: FiMapPin, label: "Address", value: studentData.personal.address || "Not provided" },
+                          { icon: FiMail, label: "Email", value: studentData.email },
+                          { icon: FiPhone, label: "Phone", value: studentData.phoneNumber || "Not provided" },
+                          { icon: FiCalendar, label: "Date of Birth", value: formatDate(studentData.dateOfBirth) },
+                          { icon: FiUser, label: "Gender", value: studentData.gender || "Not provided" },
+                          { icon: FiMapPin, label: "Address", value: studentData.address || "Not provided" },
+                          { icon: FiClock, label: "Member Since", value: formatDate(studentData.createdAt) },
                         ].map((item, index) => {
                           const Icon = item.icon;
                           return (
@@ -718,76 +552,75 @@ export default function ProfilePage() {
                         })}
                       </div>
                     </div>
-
-                    {studentData.personal.socialLinks && (
-                      <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-[#E2E8F0] dark:border-[#334155] shadow-sm p-6">
-                        <h3 className="text-lg font-bold text-[#111111] dark:text-white mb-4 flex items-center space-x-2">
-                          <FiGlobe className="w-5 h-5 text-[#0057D9]" />
-                          <span>Social Links</span>
-                        </h3>
-                        <div className="space-y-3">
-                          {studentData.personal.socialLinks.github && (
-                            <a href={`https://${studentData.personal.socialLinks.github}`} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-3 p-3 rounded-xl bg-[#F8FAFC] dark:bg-[#0F172A] hover:bg-[#F1F5F9] dark:hover:bg-[#1E293B] transition-colors duration-200">
-                              <SiGithub className="w-5 h-5 text-[#111111] dark:text-white" />
-                              <span className="text-sm text-[#475569] dark:text-[#CBD5E1]">{studentData.personal.socialLinks.github}</span>
-                            </a>
-                          )}
-                          {studentData.personal.socialLinks.linkedin && (
-                            <a href={`https://${studentData.personal.socialLinks.linkedin}`} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-3 p-3 rounded-xl bg-[#F8FAFC] dark:bg-[#0F172A] hover:bg-[#F1F5F9] dark:hover:bg-[#1E293B] transition-colors duration-200">
-                              <FiUsers className="w-5 h-5 text-[#0A66C2]" />
-                              <span className="text-sm text-[#475569] dark:text-[#CBD5E1]">{studentData.personal.socialLinks.linkedin}</span>
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    )}
                   </motion.div>
 
-                  {/* Right Column */}
+                  {/* Right Column - Academic Info */}
                   <motion.div variants={containerVariants} initial="hidden" animate="visible" className="lg:col-span-2 space-y-6">
-                    {/* Academic Summary */}
-                    {studentData.academic.cgpa > 0 && (
+                    <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-[#E2E8F0] dark:border-[#334155] shadow-sm p-6">
+                      <h3 className="text-lg font-bold text-[#111111] dark:text-white mb-6 flex items-center space-x-2">
+                        <FaGraduationCap className="w-5 h-5 text-[#0057D9]" />
+                        <span>Academic Information</span>
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[
+                          { label: "Roll Number", value: studentData.rollNo },
+                          { label: "Course", value: studentData.course },
+                          { label: "Course Duration", value: studentData.courseDuration },
+                          { label: "Role", value: studentData.role },
+                        ].map((item, index) => (
+                          <div key={index} className="bg-[#F8FAFC] dark:bg-[#0F172A] rounded-xl p-4 border border-[#E2E8F0] dark:border-[#334155]">
+                            <div className="text-sm text-[#94A3B8] mb-1">{item.label}</div>
+                            <div className="text-lg font-semibold text-[#111111] dark:text-white">{item.value}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Editable Fields Section */}
+                    {isEditing && (
                       <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-[#E2E8F0] dark:border-[#334155] shadow-sm p-6">
                         <h3 className="text-lg font-bold text-[#111111] dark:text-white mb-6 flex items-center space-x-2">
-                          <FaGraduationCap className="w-5 h-5 text-[#0057D9]" />
-                          <span>Academic Summary</span>
+                          <FiEdit3 className="w-5 h-5 text-[#0057D9]" />
+                          <span>Edit Information</span>
                         </h3>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {[
-                            { label: "CGPA", value: studentData.academic.cgpa, sub: "Out of 10" },
-                            { label: "Attendance", value: `${studentData.academic.attendance}%`, sub: "Current Semester" },
-                            { label: "Semester", value: studentData.academic.semester, sub: "Current" },
-                            { label: "Section", value: studentData.academic.section || "N/A", sub: "Division" },
-                          ].map((item, index) => (
-                            <div key={index} className="bg-[#F8FAFC] dark:bg-[#0F172A] rounded-xl p-4 text-center border border-[#E2E8F0] dark:border-[#334155]">
-                              <div className="text-2xl font-bold text-[#0057D9] dark:text-[#4D8DFF] mb-1">{item.value}</div>
-                              <div className="text-sm font-medium text-[#111111] dark:text-white">{item.label}</div>
-                              <div className="text-xs text-[#94A3B8]">{item.sub}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Recent Activity */}
-                    {studentData.activities && studentData.activities.length > 0 && (
-                      <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-[#E2E8F0] dark:border-[#334155] shadow-sm p-6">
-                        <div className="flex items-center justify-between mb-6">
-                          <h3 className="text-lg font-bold text-[#111111] dark:text-white flex items-center space-x-2">
-                            <FiActivity className="w-5 h-5 text-[#0057D9]" />
-                            <span>Recent Activity</span>
-                          </h3>
-                        </div>
-                        <div className="space-y-4">
-                          {studentData.activities.slice(0, 4).map((activity, index) => (
-                            <div key={index} className="flex items-start space-x-3 p-3 rounded-xl hover:bg-[#F8FAFC] dark:hover:bg-[#0F172A] transition-colors duration-200">
-                              <div className="w-9 h-9 rounded-lg bg-[#F1F5F9] dark:bg-[#0F172A] flex items-center justify-center flex-shrink-0">
-                                <FiActivity className="w-4 h-4 text-[#0057D9] dark:text-[#4D8DFF]" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-[#111111] dark:text-white">{activity.title}</p>
-                                <p className="text-xs text-[#94A3B8]">{activity.date}</p>
-                              </div>
+                            { label: "Phone Number", key: "phoneNumber", type: "text" },
+                            { label: "Gender", key: "gender", type: "select", options: ["Male", "Female", "Other"] },
+                            { label: "Date of Birth", key: "dateOfBirth", type: "date" },
+                            { label: "Address", key: "address", type: "text" },
+                            { label: "Course", key: "course", type: "text" },
+                            { label: "Course Duration", key: "courseDuration", type: "text" },
+                          ].map((field, index) => (
+                            <div key={index}>
+                              <label className="block text-sm font-medium text-[#475569] dark:text-[#CBD5E1] mb-2">
+                                {field.label}
+                              </label>
+                              {field.type === "select" ? (
+                                <select
+                                  value={editedData[field.key] || ""}
+                                  onChange={(e) => setEditedData({
+                                    ...editedData,
+                                    [field.key]: e.target.value
+                                  })}
+                                  className="w-full px-3 py-2 border border-[#E2E8F0] dark:border-[#334155] rounded-lg bg-white dark:bg-[#0F172A] text-[#111111] dark:text-white focus:ring-2 focus:ring-[#0057D9] focus:border-transparent"
+                                >
+                                  <option value="">Select {field.label}</option>
+                                  {field.options.map(option => (
+                                    <option key={option} value={option}>{option}</option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <input
+                                  type={field.type}
+                                  value={field.type === "date" ? (editedData[field.key] ? new Date(editedData[field.key]).toISOString().split('T')[0] : "") : (editedData[field.key] || "")}
+                                  onChange={(e) => setEditedData({
+                                    ...editedData,
+                                    [field.key]: e.target.value
+                                  })}
+                                  className="w-full px-3 py-2 border border-[#E2E8F0] dark:border-[#334155] rounded-lg bg-white dark:bg-[#0F172A] text-[#111111] dark:text-white focus:ring-2 focus:ring-[#0057D9] focus:border-transparent"
+                                />
+                              )}
                             </div>
                           ))}
                         </div>
@@ -797,23 +630,114 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {/* Other tabs content remains the same but with data from localStorage */}
-              {/* Academic Tab, Skills Tab, Subjects Tab, Achievements Tab, Fee Details Tab, Activity Tab */}
-              {/* These will render conditionally based on available data */}
-
-              {activeTab !== "overview" && (
-                <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-[#E2E8F0] dark:border-[#334155] shadow-sm p-12 text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-[#F1F5F9] dark:bg-[#0F172A] flex items-center justify-center mx-auto mb-4">
-                    <FiGrid className="w-8 h-8 text-[#94A3B8]" />
-                  </div>
-                  <h3 className="text-lg font-bold text-[#111111] dark:text-white mb-2">
-                    {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Section
+              {/* Academic Tab */}
+              {activeTab === "academic" && (
+                <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-[#E2E8F0] dark:border-[#334155] shadow-sm p-6">
+                  <h3 className="text-lg font-bold text-[#111111] dark:text-white mb-6 flex items-center space-x-2">
+                    <FaGraduationCap className="w-5 h-5 text-[#0057D9]" />
+                    <span>Academic Details</span>
                   </h3>
-                  <p className="text-[#64748B] dark:text-[#94A3B8]">
-                    {studentData[activeTab] && studentData[activeTab].length > 0 
-                      ? `${studentData[activeTab].length} items available` 
-                      : "No data available yet. Complete your profile to see more details."}
-                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {[
+                      { label: "Course", value: studentData.course },
+                      { label: "Course Duration", value: studentData.courseDuration },
+                      { label: "Roll Number", value: studentData.rollNo },
+                      { label: "Enrollment Date", value: formatDate(studentData.createdAt) },
+                      { label: "Last Updated", value: formatDate(studentData.updatedAt) },
+                    ].map((item, index) => (
+                      <div key={index} className="flex items-start space-x-3">
+                        <div className="w-9 h-9 rounded-lg bg-[#F1F5F9] dark:bg-[#0F172A] flex items-center justify-center flex-shrink-0">
+                          <FiBookOpen className="w-4 h-4 text-[#0057D9] dark:text-[#4D8DFF]" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-[#94A3B8] uppercase tracking-wider">{item.label}</p>
+                          <p className="text-sm font-medium text-[#111111] dark:text-white">{item.value}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Family Tab */}
+              {activeTab === "family" && (
+                <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-[#E2E8F0] dark:border-[#334155] shadow-sm p-6">
+                  <h3 className="text-lg font-bold text-[#111111] dark:text-white mb-6 flex items-center space-x-2">
+                    <FiUsers className="w-5 h-5 text-[#0057D9]" />
+                    <span>Family Information</span>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {[
+                      { label: "Father's Name", value: studentData.fathername, editable: true, key: "fathername" },
+                      { label: "Mother's Name", value: studentData.mothername, editable: true, key: "mothername" },
+                    ].map((item, index) => (
+                      <div key={index} className="flex items-start space-x-3">
+                        <div className="w-9 h-9 rounded-lg bg-[#F1F5F9] dark:bg-[#0F172A] flex items-center justify-center flex-shrink-0">
+                          <FiUser className="w-4 h-4 text-[#0057D9] dark:text-[#4D8DFF]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs text-[#94A3B8] uppercase tracking-wider">{item.label}</p>
+                          {isEditing && item.editable ? (
+                            <input
+                              type="text"
+                              value={editedData[item.key] || ""}
+                              onChange={(e) => setEditedData({
+                                ...editedData,
+                                [item.key]: e.target.value
+                              })}
+                              className="w-full px-3 py-1 border border-[#E2E8F0] dark:border-[#334155] rounded-lg bg-white dark:bg-[#0F172A] text-[#111111] dark:text-white text-sm"
+                            />
+                          ) : (
+                            <p className="text-sm font-medium text-[#111111] dark:text-white">{item.value}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Contact Tab */}
+              {activeTab === "contact" && (
+                <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-[#E2E8F0] dark:border-[#334155] shadow-sm p-6">
+                  <h3 className="text-lg font-bold text-[#111111] dark:text-white mb-6 flex items-center space-x-2">
+                    <FiPhone className="w-5 h-5 text-[#0057D9]" />
+                    <span>Contact Information</span>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {[
+                      { label: "Email", value: studentData.email, icon: FiMail, editable: false },
+                      { label: "Phone Number", value: studentData.phoneNumber, icon: FiPhone, editable: true, key: "phoneNumber" },
+                      { label: "Address", value: studentData.address, icon: FiMapPin, editable: true, key: "address" },
+                      { label: "Gender", value: studentData.gender, icon: FiUser, editable: true, key: "gender" },
+                      { label: "Date of Birth", value: formatDate(studentData.dateOfBirth), icon: FiCalendar, editable: true, key: "dateOfBirth" },
+                    ].map((item, index) => {
+                      const Icon = item.icon;
+                      return (
+                        <div key={index} className="flex items-start space-x-3">
+                          <div className="w-9 h-9 rounded-lg bg-[#F1F5F9] dark:bg-[#0F172A] flex items-center justify-center flex-shrink-0">
+                            <Icon className="w-4 h-4 text-[#0057D9] dark:text-[#4D8DFF]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-xs text-[#94A3B8] uppercase tracking-wider">{item.label}</p>
+                            {isEditing && item.editable ? (
+                              <input
+                                type="text"
+                                value={editedData[item.key] || ""}
+                                onChange={(e) => setEditedData({
+                                  ...editedData,
+                                  [item.key]: e.target.value
+                                })}
+                                className="w-full px-3 py-1 border border-[#E2E8F0] dark:border-[#334155] rounded-lg bg-white dark:bg-[#0F172A] text-[#111111] dark:text-white text-sm"
+                              />
+                            ) : (
+                              <p className="text-sm font-medium text-[#111111] dark:text-white">{item.value}</p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </motion.div>
