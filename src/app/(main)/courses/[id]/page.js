@@ -5,12 +5,24 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import coursesData from "@/src/app/utils/coursePageData";
-
-
-
-// Adjustable image heights (in px)
-const COURSE_IMAGE_HEIGHT_MOBILE = 450; 
-const COURSE_IMAGE_HEIGHT_LG = 450;   
+import { 
+  ArrowLeft, 
+  Clock, 
+  CheckCircle, 
+  BookOpen, 
+  Users, 
+  Star, 
+  ChevronRight,
+  GraduationCap,
+  Zap,
+  Heart,
+  Share2,
+  Bookmark,
+  Award,
+  Sparkles,
+  Loader2,
+  Check
+} from "lucide-react";
 
 const CourseDetail = () => {
   const params = useParams();
@@ -20,6 +32,11 @@ const CourseDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [enrollHover, setEnrollHover] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
+  const [enrollmentSuccess, setEnrollmentSuccess] = useState(false);
+  const [message, setMessage] = useState({ type: "", text: "" });
 
   useEffect(() => {
     const courseId = parseInt(params.id);
@@ -27,6 +44,9 @@ const CourseDetail = () => {
     
     if (foundCourse) {
       setCourse(foundCourse);
+      // Check if course is bookmarked
+      const bookmarks = JSON.parse(localStorage.getItem("courseBookmarks") || "[]");
+      setIsBookmarked(bookmarks.includes(foundCourse.courseID));
     } else {
       router.push("/courses");
     }
@@ -34,89 +54,160 @@ const CourseDetail = () => {
     setIsLoading(false);
   }, [params.id, router]);
 
-  // Animation variants
-  const pageVariants = {
-    initial: { opacity: 0 },
-    in: { 
-      opacity: 1,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut"
+  // Handle Enrollment
+  const handleEnroll = async () => {
+    setEnrolling(true);
+    setMessage({ type: "", text: "" });
+    
+    try {
+      // Check if user is logged in
+      const token = localStorage.getItem("studentToken");
+      if (!token) {
+        setMessage({ 
+          type: "error", 
+          text: "Please login first to enroll in this course" 
+        });
+        setTimeout(() => {
+          router.push("/student-login");
+        }, 2000);
+        setEnrolling(false);
+        return;
       }
-    },
-    out: { 
-      opacity: 0,
-      transition: {
-        duration: 0.4,
-        ease: "easeIn"
+
+      // Simulate enrollment process
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Store enrollment data
+      const enrollments = JSON.parse(localStorage.getItem("enrolledCourses") || "[]");
+      if (!enrollments.includes(course.courseID)) {
+        enrollments.push(course.courseID);
+        localStorage.setItem("enrolledCourses", JSON.stringify(enrollments));
       }
+      
+      setEnrollmentSuccess(true);
+      setMessage({ 
+        type: "success", 
+        text: "Successfully enrolled! Redirecting to your courses..." 
+      });
+      
+      setTimeout(() => {
+        router.push("/my-courses");
+      }, 2000);
+      
+    } catch (error) {
+      setMessage({ 
+        type: "error", 
+        text: "Enrollment failed. Please try again." 
+      });
+    } finally {
+      setEnrolling(false);
     }
   };
 
-  const staggerChildren = {
+  // Handle Bookmark Toggle
+  const toggleBookmark = () => {
+    const bookmarks = JSON.parse(localStorage.getItem("courseBookmarks") || "[]");
+    
+    if (isBookmarked) {
+      const updatedBookmarks = bookmarks.filter(id => id !== course.courseID);
+      localStorage.setItem("courseBookmarks", JSON.stringify(updatedBookmarks));
+      setMessage({ type: "success", text: "Course removed from bookmarks" });
+    } else {
+      bookmarks.push(course.courseID);
+      localStorage.setItem("courseBookmarks", JSON.stringify(bookmarks));
+      setMessage({ type: "success", text: "Course added to bookmarks!" });
+    }
+    
+    setIsBookmarked(!isBookmarked);
+    setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+  };
+
+  // Handle Share
+  const handleShare = async () => {
+    const shareData = {
+      title: course.courseName,
+      text: `Check out this course: ${course.courseName} - ${course.description}`,
+      url: window.location.href,
+    };
+
+    // Check if Web Share API is supported
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        setMessage({ type: "success", text: "Shared successfully!" });
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          setMessage({ type: "error", text: "Could not share. Copy link instead!" });
+        }
+      }
+    } else {
+      // Fallback: Copy to clipboard
+      navigator.clipboard.writeText(window.location.href);
+      setMessage({ type: "success", text: "Link copied to clipboard!" });
+    }
+    
+    setTimeout(() => {
+      setMessage({ type: "", text: "" });
+    }, 2000);
+  };
+
+  // Animation variants
+  const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
+        staggerChildren: 0.1,
+        delayChildren: 0.2
       }
     }
   };
 
-  const fadeInUp = {
-    hidden: { y: 40, opacity: 0 },
+  const itemVariants = {
+    hidden: { y: 30, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
       transition: {
-        duration: 0.6,
-        ease: "easeOut"
-      }
-    }
-  };
-
-  const scaleIn = {
-    hidden: { scale: 0.9, opacity: 0 },
-    visible: {
-      scale: 1,
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut"
-      }
-    }
-  };
-
-  const slideIn = {
-    hidden: { x: -30, opacity: 0 },
-    visible: {
-      x: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut"
+        type: "spring",
+        stiffness: 100,
+        damping: 12
       }
     }
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-100">
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background: 'linear-gradient(135deg, #e8edf5 0%, #d5dce8 25%, #cbd5e1 50%, #d5dce8 75%, #e8edf5 100%)',
+        }}
+      >
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
           className="flex flex-col items-center"
         >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full mb-4"
-          ></motion.div>
+          <div 
+            className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6"
+            style={{
+              background: 'linear-gradient(135deg, #0057D9, #003E99)',
+              boxShadow: '8px 8px 16px #c5cdd8, -8px -8px 16px #ffffff',
+            }}
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            >
+              <BookOpen className="w-10 h-10 text-white" />
+            </motion.div>
+          </div>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="text-gray-600"
+            className="text-gray-600 font-medium"
           >
             Loading course details...
           </motion.p>
@@ -127,18 +218,41 @@ const CourseDetail = () => {
 
   if (!course) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-100">
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background: 'linear-gradient(135deg, #e8edf5 0%, #d5dce8 25%, #cbd5e1 50%, #d5dce8 75%, #e8edf5 100%)',
+        }}
+      >
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center p-8 bg-white rounded-2xl shadow-xl"
+          className="text-center p-8 rounded-3xl"
+          style={{
+            background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+            boxShadow: '20px 20px 60px #c5cdd8, -20px -20px 60px #ffffff',
+          }}
         >
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Course not found</h2>
+          <div 
+            className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6"
+            style={{
+              background: 'linear-gradient(135deg, #0057D9, #003E99)',
+              boxShadow: 'inset 4px 4px 8px rgba(0,0,0,0.2), inset -4px -4px 8px rgba(255,255,255,0.1)',
+            }}
+          >
+            <GraduationCap className="w-10 h-10 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Course Not Found</h2>
+          <p className="text-gray-600 mb-6">The course you're looking for doesn't exist or has been removed.</p>
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => router.push("/courses")}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all"
+            className="px-8 py-4 rounded-2xl font-semibold text-white"
+            style={{
+              background: 'linear-gradient(135deg, #0057D9, #003E99)',
+              boxShadow: '8px 8px 16px #c5cdd8, -8px -8px 16px #ffffff',
+            }}
           >
             Back to Courses
           </motion.button>
@@ -148,344 +262,479 @@ const CourseDetail = () => {
   }
 
   return (
-    <motion.div
-      initial="initial"
-      animate="in"
-      exit="out"
-      variants={pageVariants}
-      className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-100 py-8 px-4"
+    <div 
+      className="min-h-screen relative py-8 px-4 sm:px-6 lg:px-8"
+      style={{
+        background: 'linear-gradient(135deg, #e8edf5 0%, #d5dce8 25%, #cbd5e1 50%, #d5dce8 75%, #e8edf5 100%)',
+      }}
     >
-      {/* Animated background elements */}
+      {/* Animated Background Particles */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {[...Array(5)].map((_, i) => (
+        {[...Array(12)].map((_, i) => (
           <motion.div
             key={i}
+            className="absolute rounded-full"
+            style={{
+              width: Math.random() * 60 + 20,
+              height: Math.random() * 60 + 20,
+              background: `radial-gradient(circle, rgba(0,87,217,${Math.random() * 0.06 + 0.02}) 0%, transparent 70%)`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
             animate={{
-              y: [0, -20, 0],
-              x: [0, 15, 0],
-              rotate: [0, 5, 0],
+              x: [0, Math.random() * 60 - 30, 0],
+              y: [0, Math.random() * 60 - 30, 0],
+              scale: [1, Math.random() * 0.3 + 0.85, 1],
             }}
             transition={{
-              duration: 8 + i * 2,
+              duration: Math.random() * 10 + 10,
               repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 0.5
-            }}
-            className="absolute opacity-10"
-            style={{
-              top: `${20 + i * 15}%`,
-              left: `${10 + i * 10}%`,
-              width: "40px",
-              height: "40px",
-              borderRadius: "8px",
-              background: "linear-gradient(135deg, #3b82f6, #06b6d4)",
+              ease: "linear",
             }}
           />
         ))}
       </div>
 
-      <div className="max-w-6xl mx-auto relative z-10">
-        {/* Back Button */}
-        <motion.button
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          whileHover={{ x: -5, backgroundColor: "rgba(255, 255, 255, 0.9)" }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => router.back()}
-          className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-xl shadow-sm hover:shadow-md transition-all mb-6 text-blue-600 font-medium"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-          </svg>
-          Back to Courses
-        </motion.button>
-
-        {/* Course Header */}
-        <motion.div 
-          variants={staggerChildren}
-          initial="hidden"
-          animate="visible"
-          className="flex flex-col lg:flex-row gap-8 mb-12"
-        >
-          <motion.div 
-            variants={scaleIn}
-            className={`relative w-full lg:w-2/5 rounded-2xl overflow-hidden shadow-2xl`}
+      {/* Toast Message */}
+      <AnimatePresence>
+        {message.text && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: -50, x: "-50%" }}
+            className="fixed top-4 left-1/2 z-50 px-6 py-3 rounded-2xl shadow-lg"
             style={{
-              height: `${COURSE_IMAGE_HEIGHT_MOBILE}px`,
+              background: message.type === "success" 
+                ? 'linear-gradient(135deg, #10b981, #059669)' 
+                : 'linear-gradient(135deg, #ef4444, #dc2626)',
             }}
           >
-            <style jsx>{`
-              @media (min-width: 1024px) {
-                .course-image-container {
-                  height: ${COURSE_IMAGE_HEIGHT_LG}px !important;
-                }
-              }
-            `}</style>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: imageLoaded ? 0 : 1 }}
-              className="absolute inset-0 bg-gradient-to-r from-blue-100 to-cyan-100 flex items-center justify-center"
-            >
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                className="w-12 h-12 border-t-2 border-blue-400 border-solid rounded-full"
-              />
-            </motion.div>
-            <div className="course-image-container" style={{position: 'relative', width: '100%', height: '100%'}}>
-              <Image
-                src={course.CourseImage}
-                alt={course.courseName}
-                fill
-                className="object-cover"
-                priority
-                onLoad={() => setImageLoaded(true)}
-              />
-            </div>
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-end"
-            >
-              <div className="p-4 text-white">
-                <Typography variant="h6" className="text-white">
-                  {course.courseName}
-                </Typography>
-              </div>
-            </motion.div>
+            <p className="text-white font-medium">{message.text}</p>
           </motion.div>
-          
-          <motion.div 
-            variants={staggerChildren}
-            className="flex-1"
+        )}
+      </AnimatePresence>
+
+      <div className="max-w-6xl mx-auto relative z-10">
+        {/* Back Button & Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="flex items-center justify-between mb-8"
+        >
+          <motion.button
+            whileHover={{ x: -5 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => router.back()}
+            className="flex items-center space-x-2 px-5 py-3 rounded-2xl font-medium text-gray-700"
+            style={{
+              background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+              boxShadow: '4px 4px 8px #c5cdd8, -4px -4px 8px #ffffff',
+            }}
           >
-            <motion.div 
-              variants={fadeInUp}
-              className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl mb-6"
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back</span>
+          </motion.button>
+
+          <div className="flex items-center space-x-3">
+            {/* Share Button */}
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleShare}
+              className="w-12 h-12 rounded-2xl flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                boxShadow: '4px 4px 8px #c5cdd8, -4px -4px 8px #ffffff',
+              }}
             >
-              <motion.h1 
-                variants={fadeInUp}
-                className="text-3xl md:text-4xl font-bold text-blue-500 mb-4"
+              <Share2 className="w-5 h-5 text-gray-600" />
+            </motion.button>
+
+            {/* Bookmark Button */}
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={toggleBookmark}
+              className="w-12 h-12 rounded-2xl flex items-center justify-center"
+              style={{
+                background: isBookmarked 
+                  ? 'linear-gradient(135deg, #0057D9, #003E99)' 
+                  : 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                boxShadow: isBookmarked
+                  ? 'inset 4px 4px 8px rgba(0,0,0,0.2), inset -4px -4px 8px rgba(255,255,255,0.1)'
+                  : '4px 4px 8px #c5cdd8, -4px -4px 8px #ffffff',
+              }}
+            >
+              <Bookmark className={`w-5 h-5 ${isBookmarked ? 'text-white fill-white' : 'text-gray-600'}`} />
+            </motion.button>
+          </div>
+        </motion.div>
+
+        {/* Course Header */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid lg:grid-cols-5 gap-8 mb-12"
+        >
+          {/* Course Image - WITHOUT Play Button */}
+          <motion.div 
+            variants={itemVariants}
+            className="lg:col-span-2"
+          >
+            <div 
+              className="relative rounded-3xl overflow-hidden"
+              style={{
+                boxShadow: '20px 20px 60px #c5cdd8, -20px -20px 60px #ffffff',
+              }}
+            >
+              <div className="relative w-full h-[400px]">
+                {!imageLoaded && (
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      className="w-12 h-12 border-t-2 border-[#0057D9] border-solid rounded-full"
+                    />
+                  </div>
+                )}
+                <Image
+                  src={course.CourseImage}
+                  alt={course.courseName}
+                  fill
+                  className="object-cover"
+                  priority
+                  onLoad={() => setImageLoaded(true)}
+                />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Course Info */}
+          <motion.div 
+            variants={itemVariants}
+            className="lg:col-span-3 space-y-6"
+          >
+            <div 
+              className="p-8 rounded-3xl"
+              style={{
+                background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                boxShadow: '20px 20px 60px #c5cdd8, -20px -20px 60px #ffffff',
+              }}
+            >
+              {/* Category Badge */}
+              <motion.span
+                whileHover={{ scale: 1.05 }}
+                className="inline-block px-4 py-2 rounded-xl text-sm font-semibold text-white mb-4"
+                style={{
+                  background: 'linear-gradient(135deg, #0057D9, #003E99)',
+                  boxShadow: '4px 4px 8px rgba(0,0,0,0.1)',
+                }}
+              >
+                {course.category || "Development"}
+              </motion.span>
+
+              <h1 
+                className="text-3xl md:text-4xl font-bold mb-4"
+                style={{
+                  background: 'linear-gradient(135deg, #1e293b, #334155)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
               >
                 {course.courseName}
-              </motion.h1>
-              
-              <motion.p 
-                variants={fadeInUp}
-                className="text-gray-600 mb-6 text-lg"
-              >
+              </h1>
+
+              <p className="text-gray-600 text-lg leading-relaxed mb-6">
                 {course.description}
-              </motion.p>
-            </motion.div>
-            
-            <motion.div 
-              variants={staggerChildren}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6"
-            >
-              <motion.div 
-                variants={fadeInUp}
-                whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-white/50"
-              >
-                <div className="flex items-center">
-                  <motion.div 
-                    className="p-2 bg-blue-100 rounded-lg mr-4"
-                    whileHover={{ rotate: 10 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </motion.div>
-                  <div>
-                    <h3 className="text-sm text-gray-500">Duration</h3>
-                    <p className="text-lg font-semibold">{course.courseDuration}</p>
-                  </div>
+              </p>
+
+              {/* Rating */}
+              <div className="flex items-center space-x-2 mb-6">
+                <div className="flex">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                  ))}
                 </div>
-              </motion.div>
-              
-              <motion.div 
-                variants={fadeInUp}
-                whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-white/50"
-              >
-                <div className="flex items-center">
-                  <motion.div 
-                    className="p-2 bg-cyan-100 rounded-lg mr-4"
-                    whileHover={{ rotate: -10 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </motion.div>
-                  <div>
-                    <h3 className="text-sm text-gray-500">Course Fee</h3>
-                    <p className="text-lg font-semibold">₹{course.courseFee}</p>
-                  </div>
+                <span className="text-gray-700 font-semibold">4.8</span>
+                <span className="text-gray-500">(2,456 ratings)</span>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div 
+                  className="p-4 rounded-2xl text-center"
+                  style={{
+                    background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                    boxShadow: 'inset 4px 4px 8px #c5cdd8, inset -4px -4px 8px #ffffff',
+                  }}
+                >
+                  <Clock className="w-6 h-6 text-[#0057D9] mx-auto mb-2" />
+                  <p className="text-xs text-gray-500">Duration</p>
+                  <p className="font-semibold text-gray-800">{course.courseDuration}</p>
                 </div>
-              </motion.div>
-            </motion.div>
-            
-            <motion.button
-              whileHover={{ 
-                scale: 1.02,
-                boxShadow: "0 10px 25px -5px rgba(37, 99, 235, 0.4)"
-              }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
-            >
-              <span>Enroll Now</span>
-              <motion.svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-5 w-5" 
-                viewBox="0 0 20 20" 
-                fill="currentColor"
-                animate={{ x: [0, 5, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-              </motion.svg>
-            </motion.button>
+                <div 
+                  className="p-4 rounded-2xl text-center"
+                  style={{
+                    background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                    boxShadow: 'inset 4px 4px 8px #c5cdd8, inset -4px -4px 8px #ffffff',
+                  }}
+                >
+                  <Users className="w-6 h-6 text-[#0057D9] mx-auto mb-2" />
+                  <p className="text-xs text-gray-500">Students</p>
+                  <p className="font-semibold text-gray-800">2,456</p>
+                </div>
+                <div 
+                  className="p-4 rounded-2xl text-center"
+                  style={{
+                    background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                    boxShadow: 'inset 4px 4px 8px #c5cdd8, inset -4px -4px 8px #ffffff',
+                  }}
+                >
+                  <BookOpen className="w-6 h-6 text-[#0057D9] mx-auto mb-2" />
+                  <p className="text-xs text-gray-500">Lessons</p>
+                  <p className="font-semibold text-gray-800">{course.courseSyllabus?.length * 5 || 24}</p>
+                </div>
+                <div 
+                  className="p-4 rounded-2xl text-center"
+                  style={{
+                    background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                    boxShadow: 'inset 4px 4px 8px #c5cdd8, inset -4px -4px 8px #ffffff',
+                  }}
+                >
+                  <Award className="w-6 h-6 text-[#0057D9] mx-auto mb-2" />
+                  <p className="text-xs text-gray-500">Certificate</p>
+                  <p className="font-semibold text-gray-800">Yes</p>
+                </div>
+              </div>
+
+              {/* Price & Enroll */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Course Fee</p>
+                  <p className="text-3xl font-bold text-[#0057D9]">₹{course.courseFee}</p>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleEnroll}
+                  disabled={enrolling || enrollmentSuccess}
+                  onHoverStart={() => setEnrollHover(true)}
+                  onHoverEnd={() => setEnrollHover(false)}
+                  className="px-8 py-4 rounded-2xl font-semibold text-white flex items-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                  style={{
+                    background: enrollmentSuccess 
+                      ? 'linear-gradient(135deg, #10b981, #059669)' 
+                      : 'linear-gradient(135deg, #0057D9, #003E99)',
+                    boxShadow: '8px 8px 16px #c5cdd8, -8px -8px 16px #ffffff',
+                  }}
+                >
+                  {enrolling ? (
+                    <>
+                      <Loader2 className="animate-spin w-5 h-5" />
+                      <span>Enrolling...</span>
+                    </>
+                  ) : enrollmentSuccess ? (
+                    <>
+                      <Check className="w-5 h-5" />
+                      <span>Enrolled!</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Enroll Now</span>
+                      <motion.div
+                        animate={{ x: enrollHover ? 5 : 0 }}
+                        transition={{ type: "spring", stiffness: 200 }}
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </motion.div>
+                    </>
+                  )}
+                </motion.button>
+              </div>
+            </div>
           </motion.div>
         </motion.div>
 
         {/* Navigation Tabs */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="flex overflow-x-auto scrollbar-hide mb-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-md p-1"
+          transition={{ delay: 0.3 }}
+          className="mb-8"
         >
-          {["Overview", "Curriculum", "Instructor", "Reviews"].map((tab, index) => (
-            <button
-              key={index}
-              onClick={() => setActiveTab(tab.toLowerCase())}
-              className={`px-6 py-3 font-medium whitespace-nowrap rounded-xl transition-all ${activeTab === tab.toLowerCase() ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
-            >
-              {tab}
-            </button>
-          ))}
+          <div 
+            className="flex rounded-2xl p-1.5"
+            style={{
+              background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+              boxShadow: 'inset 4px 4px 8px #c5cdd8, inset -4px -4px 8px #ffffff',
+            }}
+          >
+            {["overview", "curriculum", "instructor", "reviews"].map((tab) => (
+              <motion.button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`flex-1 px-6 py-3 rounded-xl font-semibold text-sm sm:text-base capitalize transition-all ${
+                  activeTab === tab 
+                    ? 'text-white' 
+                    : 'text-gray-600'
+                }`}
+                style={activeTab === tab ? {
+                  background: 'linear-gradient(135deg, #0057D9, #003E99)',
+                  boxShadow: '4px 4px 8px #c5cdd8, -4px -4px 8px #ffffff',
+                } : {}}
+              >
+                {tab}
+              </motion.button>
+            ))}
+          </div>
         </motion.div>
 
+        {/* Tab Content */}
         <AnimatePresence mode="wait">
           {activeTab === "overview" && (
             <motion.div
               key="overview"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-8"
             >
-              {/* What You'll Learn Section */}
-              <motion.section 
-                variants={fadeInUp}
-                className="mb-12"
+              {/* What You'll Learn */}
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
               >
-                <motion.h2 
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="text-2xl font-bold text-gray-800 mb-6 flex items-center"
+                <div 
+                  className="p-8 rounded-3xl"
+                  style={{
+                    background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                    boxShadow: '20px 20px 60px #c5cdd8, -20px -20px 60px #ffffff',
+                  }}
                 >
-                  <span className="w-2 h-6 bg-blue-600 rounded-full mr-3"></span>
-                  What You'll Learn
-                </motion.h2>
-                
-                <motion.div 
-                  variants={staggerChildren}
-                  initial="hidden"
-                  animate="visible"
-                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                >
-                  {course.courseLearnings.map((learning, index) => (
-                    <motion.div
-                      key={index}
-                      variants={fadeInUp}
-                      whileHover={{ y: -3, boxShadow: "0 8px 20px -5px rgba(0, 0, 0, 0.1)" }}
-                      className="flex items-start bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-white/50"
+                  <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <span 
+                      className="w-10 h-10 rounded-xl flex items-center justify-center mr-3"
+                      style={{
+                        background: 'linear-gradient(135deg, #0057D9, #003E99)',
+                        boxShadow: 'inset 2px 2px 4px rgba(0,0,0,0.2)',
+                      }}
                     >
-                      <motion.div 
-                        className="flex-shrink-0"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
+                      <Zap className="w-5 h-5 text-white" />
+                    </span>
+                    What You'll Learn
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {course.courseLearnings.map((learning, index) => (
+                      <motion.div
+                        key={index}
+                        variants={itemVariants}
+                        whileHover={{ y: -3 }}
+                        className="flex items-start p-4 rounded-2xl"
+                        style={{
+                          background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                          boxShadow: '4px 4px 8px #c5cdd8, -4px -4px 8px #ffffff',
+                        }}
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
+                        <CheckCircle className="w-6 h-6 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                        <span className="text-gray-700">{learning}</span>
                       </motion.div>
-                      <p className="text-gray-700">{learning}</p>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              </motion.section>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
 
               {/* Course Syllabus */}
-              <motion.section 
-                variants={fadeInUp}
-                className="mb-12"
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
               >
-                <motion.h2 
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-2xl font-bold text-gray-800 mb-6 flex items-center"
+                <div 
+                  className="p-8 rounded-3xl"
+                  style={{
+                    background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                    boxShadow: '20px 20px 60px #c5cdd8, -20px -20px 60px #ffffff',
+                  }}
                 >
-                  <span className="w-2 h-6 bg-cyan-600 rounded-full mr-3"></span>
-                  Course Syllabus
-                </motion.h2>
-                
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md overflow-hidden">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <span 
+                      className="w-10 h-10 rounded-xl flex items-center justify-center mr-3"
+                      style={{
+                        background: 'linear-gradient(135deg, #0057D9, #003E99)',
+                        boxShadow: 'inset 2px 2px 4px rgba(0,0,0,0.2)',
+                      }}
+                    >
+                      <BookOpen className="w-5 h-5 text-white" />
+                    </span>
+                    Course Syllabus
+                  </h2>
+
                   {/* Module Tabs */}
-                  <div className="flex overflow-x-auto scrollbar-hide border-b">
+                  <div className="flex overflow-x-auto scrollbar-hide gap-2 mb-6 pb-2">
                     {course.courseSyllabus.map((module, index) => (
                       <motion.button
                         key={index}
                         onClick={() => setActiveModule(index)}
-                        whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.5)" }}
+                        whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className={`px-6 py-4 font-medium whitespace-nowrap transition-all ${activeModule === index ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                        className={`px-5 py-3 rounded-xl font-medium whitespace-nowrap transition-all ${
+                          activeModule === index 
+                            ? 'text-white' 
+                            : 'text-gray-600'
+                        }`}
+                        style={activeModule === index ? {
+                          background: 'linear-gradient(135deg, #0057D9, #003E99)',
+                          boxShadow: '4px 4px 8px #c5cdd8, -4px -4px 8px #ffffff',
+                        } : {
+                          background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                          boxShadow: '4px 4px 8px #c5cdd8, -4px -4px 8px #ffffff',
+                        }}
                       >
                         {module.module}
                       </motion.button>
                     ))}
                   </div>
-                  
+
                   {/* Module Content */}
                   <AnimatePresence mode="wait">
-                    <motion.div 
+                    <motion.div
                       key={activeModule}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
                       transition={{ duration: 0.3 }}
-                      className="p-6"
+                      className="p-6 rounded-2xl"
+                      style={{
+                        background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                        boxShadow: 'inset 4px 4px 8px #c5cdd8, inset -4px -4px 8px #ffffff',
+                      }}
                     >
-                      <h3 className="text-xl font-semibold text-gray-800 mb-4">
+                      <h3 className="text-xl font-bold text-gray-800 mb-4">
                         {course.courseSyllabus[activeModule].module}
                       </h3>
-                      
                       <ul className="space-y-3">
                         {course.courseSyllabus[activeModule].topics.map((topic, index) => (
-                          <motion.li 
+                          <motion.li
                             key={index}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.05 }}
-                            className="flex items-start p-3 rounded-lg hover:bg-blue-50/50 transition-colors"
+                            className="flex items-center p-3 rounded-xl hover:bg-white/50 transition-colors"
                           >
-                            <motion.div 
-                              className="flex-shrink-0 mt-1"
-                              whileHover={{ scale: 1.2 }}
+                            <div 
+                              className="w-8 h-8 rounded-lg flex items-center justify-center mr-3 flex-shrink-0"
+                              style={{
+                                background: 'linear-gradient(135deg, #0057D9, #003E99)',
+                              }}
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                              </svg>
-                            </motion.div>
+                              <BookOpen className="w-4 h-4 text-white" />
+                            </div>
                             <span className="text-gray-700">{topic}</span>
                           </motion.li>
                         ))}
@@ -493,83 +742,107 @@ const CourseDetail = () => {
                     </motion.div>
                   </AnimatePresence>
                 </div>
-              </motion.section>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* CTA Section */}
-        <motion.section
+        {/* CTA Section - WITHOUT Try Free Lesson Button */}
+        <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="text-center py-12 px-4 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl shadow-2xl text-white mb-8 relative overflow-hidden"
+          transition={{ delay: 0.5 }}
+          className="mt-12"
         >
-          {/* Animated circles in background */}
-          <div className="absolute inset-0 overflow-hidden">
-            {[...Array(3)].map((_, i) => (
-              <motion.div
-                key={i}
-                animate={{
-                  scale: [1, 1.5, 1],
-                  opacity: [0.1, 0.05, 0.1],
-                }}
-                transition={{
-                  duration: 8 + i * 3,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: i
-                }}
-                className="absolute rounded-full border border-white/20"
-                style={{
-                  width: `${100 + i * 100}px`,
-                  height: `${100 + i * 100}px`,
-                  top: "50%",
-                  left: "50%",
-                  transform: `translate(-50%, -50%)`
-                }}
-              />
-            ))}
-          </div>
-          
-          <div className="relative z-10">
-            <motion.h2 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-2xl md:text-3xl font-bold mb-4"
-            >
-              Ready to Start Your Journey?
-            </motion.h2>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="mb-8 max-w-2xl mx-auto opacity-90"
-            >
-              Join thousands of students who have transformed their careers with our comprehensive courses.
-            </motion.p>
-            <motion.button
-              whileHover={{ 
-                scale: 1.05,
-                boxShadow: "0 15px 30px -5px rgba(255, 255, 255, 0.3)"
-              }}
-              whileTap={{ scale: 0.95 }}
-              className="px-8 py-4 bg-white text-blue-600 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
-            >
-              Enroll Now - ₹{course.courseFee}
-            </motion.button>
-          </div>
-        </motion.section>
-      </div>
-    </motion.div>
-  );
-};
+          <div 
+            className="p-8 md:p-12 rounded-3xl text-center text-white relative overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, #0057D9, #003E99)',
+              boxShadow: '20px 20px 60px rgba(0,87,217,0.3), -20px -20px 60px #ffffff',
+            }}
+          >
+            {/* Decorative circles */}
+            <div className="absolute inset-0 overflow-hidden">
+              {[...Array(3)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  animate={{
+                    scale: [1, 1.3, 1],
+                    opacity: [0.1, 0.05, 0.1],
+                  }}
+                  transition={{
+                    duration: 6 + i * 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: i * 0.5,
+                  }}
+                  className="absolute rounded-full border border-white/20"
+                  style={{
+                    width: `${150 + i * 100}px`,
+                    height: `${150 + i * 100}px`,
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                  }}
+                />
+              ))}
+            </div>
 
-// Simple Typography component since we don't have the exact one from the original
-const Typography = ({ variant, className, children }) => {
-  const Tag = variant === "h6" ? "h6" : "div";
-  return <Tag className={className}>{children}</Tag>;
+            <div className="relative z-10">
+              <Sparkles className="w-8 h-8 text-yellow-300 mx-auto mb-4" />
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                Ready to Start Your Journey?
+              </h2>
+              <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
+                Join thousands of students who have transformed their careers with our comprehensive courses.
+              </p>
+              <div className="flex justify-center">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleEnroll}
+                  disabled={enrolling || enrollmentSuccess}
+                  className="px-8 py-4 rounded-2xl font-semibold text-[#0057D9] flex items-center space-x-2 disabled:opacity-70"
+                  style={{
+                    background: 'linear-gradient(135deg, #ffffff, #f0f4ff)',
+                    boxShadow: '8px 8px 16px rgba(0,0,0,0.2), -8px -8px 16px rgba(255,255,255,0.1)',
+                  }}
+                >
+                  {enrolling ? (
+                    <Loader2 className="animate-spin w-5 h-5" />
+                  ) : enrollmentSuccess ? (
+                    <Check className="w-5 h-5" />
+                  ) : null}
+                  <span>{enrollmentSuccess ? 'Enrolled!' : `Enroll Now - ₹${course.courseFee}`}</span>
+                  {!enrolling && !enrollmentSuccess && <ChevronRight className="w-5 h-5" />}
+                </motion.button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Footer Note */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="mt-8 text-center"
+        >
+          <div 
+            className="inline-flex items-center space-x-2 px-6 py-3 rounded-2xl"
+            style={{
+              boxShadow: 'inset 4px 4px 8px #c5cdd8, inset -4px -4px 8px #ffffff',
+            }}
+          >
+            <Heart className="w-4 h-4 text-red-400" />
+            <span className="text-sm text-gray-600">
+              30-Day Money-Back Guarantee • Lifetime Access
+            </span>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
 };
 
 export default CourseDetail;
