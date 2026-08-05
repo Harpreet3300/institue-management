@@ -17,47 +17,22 @@ import {
   FiX,
   FiChevronDown,
   FiUser,
-  FiSettings,
-  FiHelpCircle,
   FiLogOut,
-  FiBell,
-  FiGrid,
-  FiBookmark,
-  FiCalendar,
-  FiCreditCard,
-  FiFileText,
-  FiStar,
-  FiClock,
 } from "react-icons/fi";
-import { FaGraduationCap } from "react-icons/fa";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userData, setUserData] = useState(null);
   const profileRef = useRef(null);
   const pathname = usePathname();
-
-  // Set to true for logged in state, false for logged out
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-
-  const userData = {
-    name: "Harpreet Kaur",
-    email: "harpreet.kaur@edumanage.com",
-    role: "Student",
-    course: "BCA - 5th Semester",
-    rollNo: "243698",
-    college: "GRD Group of College, Ropar",
-    initials: "HK",
-    gpa: "8.5",
-    completedCourses: 12,
-  };
 
   const navItems = [
     { name: "Home", href: "/", icon: FiHome },
     { name: "About", href: "/about", icon: FiInfo },
     { name: "Achievements", href: "/achievements", icon: FiAward },
-    // { name: "Admin Login", href: "/admin-login", icon: FiLogIn },
     { name: "Gallery", href: "/gallery", icon: FiImage },
     { name: "Courses", href: "/courses", icon: FiBookOpen },
   ];
@@ -72,6 +47,76 @@ const Navbar = () => {
     { icon: FiLogOut, label: "Logout", href: "#", onClick: "logout" },
   ];
 
+  // Check login status and fetch user data
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        // Check if user is logged in (from localStorage or API)
+        const token = localStorage.getItem('token') || localStorage.getItem('user');
+        const storedUser = localStorage.getItem('userData');
+        
+        if (token || storedUser) {
+          if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            setUserData(parsedUser);
+            setIsLoggedIn(true);
+          } else {
+            // Try to fetch user data from API
+            await fetchUserData();
+          }
+        } else {
+          setIsLoggedIn(false);
+          setUserData(null);
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+        setIsLoggedIn(false);
+        setUserData(null);
+      }
+    };
+
+    checkAuthStatus();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch('/api/user/profile');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.user) {
+          setUserData(data.user);
+          setIsLoggedIn(true);
+          localStorage.setItem('userData', JSON.stringify(data.user));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch user data:', error);
+    }
+  };
+
+  // Generate initials from user name
+  const getInitials = (name) => {
+    if (!name) return "U";
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  // Get role display text
+  const getRoleDisplay = (role) => {
+    if (!role) return "User";
+    const roles = {
+      'student': 'Student',
+      'teacher': 'Teacher',
+      'admin': 'Admin',
+      'staff': 'Staff'
+    };
+    return roles[role.toLowerCase()] || role;
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -82,6 +127,7 @@ const Navbar = () => {
 
   useEffect(() => {
     setIsOpen(false);
+    setIsProfileOpen(false);
   }, [pathname]);
 
   // Close profile dropdown when clicking outside
@@ -96,8 +142,19 @@ const Navbar = () => {
   }, []);
 
   const handleLogout = () => {
+    // Clear all auth data
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('userData');
+    localStorage.removeItem('authToken');
+    sessionStorage.clear();
+    
     setIsLoggedIn(false);
+    setUserData(null);
     setIsProfileOpen(false);
+    
+    // Optional: Redirect to home page
+    window.location.href = '/';
   };
 
   return (
@@ -168,7 +225,7 @@ const Navbar = () => {
 
             {/* Desktop Right Section - Profile & Auth Buttons */}
             <div className="hidden lg:flex lg:items-center lg:space-x-3">
-              {isLoggedIn ? (
+              {isLoggedIn && userData ? (
                 /* Profile Icon with Dropdown */
                 <div className="relative" ref={profileRef}>
                   <motion.button
@@ -184,14 +241,14 @@ const Navbar = () => {
                   >
                     {/* Avatar */}
                     <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#0057D9] to-[#003E99] flex items-center justify-center text-white font-semibold text-sm shadow-md">
-                      {userData.initials}
+                      {getInitials(userData.name || userData.fullName)}
                     </div>
                     <div className="hidden xl:block text-left">
                       <p className="text-sm font-semibold text-[#111111] dark:text-white leading-none">
-                        {userData.name}
+                        {userData.name || userData.fullName || 'User'}
                       </p>
                       <p className="text-xs text-[#64748B] dark:text-[#94A3B8] leading-none mt-1">
-                        {userData.role}
+                        {getRoleDisplay(userData.role)}
                       </p>
                     </div>
                     <FiChevronDown
@@ -215,35 +272,38 @@ const Navbar = () => {
                         <div className="p-4 bg-gradient-to-br from-[#0057D9]/5 to-[#003E99]/5 border-b border-[#E2E8F0] dark:border-[#334155]">
                           <div className="flex items-center space-x-3">
                             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0057D9] to-[#003E99] flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                              {userData.initials}
+                              {getInitials(userData.name || userData.fullName)}
                             </div>
                             <div>
                               <p className="font-semibold text-[#111111] dark:text-white">
-                                {userData.name}
+                                {userData.name || userData.fullName || 'User'}
                               </p>
                               <p className="text-xs text-[#64748B] dark:text-[#94A3B8]">
-                                {userData.email}
+                                {userData.email || 'user@example.com'}
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-4 mt-3 pt-3 border-t border-[#E2E8F0]/50 dark:border-[#334155]/50">
-                            <div>
-                              <p className="text-[10px] text-[#94A3B8] uppercase tracking-wider">Course</p>
-                              <p className="text-xs font-medium text-[#111111] dark:text-white">{userData.course}</p>
+                          {(userData.course || userData.rollNo) && (
+                            <div className="flex items-center space-x-4 mt-3 pt-3 border-t border-[#E2E8F0]/50 dark:border-[#334155]/50">
+                              {userData.course && (
+                                <div>
+                                  <p className="text-[10px] text-[#94A3B8] uppercase tracking-wider">Course</p>
+                                  <p className="text-xs font-medium text-[#111111] dark:text-white">{userData.course}</p>
+                                </div>
+                              )}
+                              {userData.rollNo && (
+                                <div>
+                                  <p className="text-[10px] text-[#94A3B8] uppercase tracking-wider">Roll No</p>
+                                  <p className="text-xs font-medium text-[#111111] dark:text-white">{userData.rollNo}</p>
+                                </div>
+                              )}
                             </div>
-                            <div>
-                              <p className="text-[10px] text-[#94A3B8] uppercase tracking-wider">Roll No</p>
-                              <p className="text-xs font-medium text-[#111111] dark:text-white">{userData.rollNo}</p>
-                            </div>
-                          </div>
+                          )}
                         </div>
 
                         {/* Menu Items */}
                         <div className="py-2">
                           {profileMenuItems.map((item, index) => {
-                            if (item.divider) {
-                              return <div key={index} className="my-2 border-t border-[#E2E8F0] dark:border-[#334155]" />;
-                            }
                             const Icon = item.icon;
                             const isLogout = item.label === "Logout";
                             
@@ -305,7 +365,7 @@ const Navbar = () => {
 
             {/* Mobile Menu Button */}
             <div className="flex lg:hidden items-center space-x-2">
-              {isLoggedIn && (
+              {isLoggedIn && userData && (
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -345,18 +405,19 @@ const Navbar = () => {
             >
               <div className="px-4 py-4 space-y-2">
                 {/* Mobile User Info - if logged in */}
-                {isLoggedIn && (
+                {isLoggedIn && userData && (
                   <div className="p-3 mb-3 bg-gradient-to-br from-[#0057D9]/5 to-[#003E99]/5 rounded-2xl border border-[#E2E8F0] dark:border-[#334155]">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0057D9] to-[#003E99] flex items-center justify-center text-white font-bold text-sm">
-                        {userData.initials}
+                        {getInitials(userData.name || userData.fullName)}
                       </div>
                       <div>
                         <p className="font-semibold text-sm text-[#111111] dark:text-white">
-                          {userData.name}
+                          {userData.name || userData.fullName || 'User'}
                         </p>
                         <p className="text-xs text-[#64748B] dark:text-[#94A3B8]">
-                          {userData.role} • {userData.rollNo}
+                          {getRoleDisplay(userData.role)}
+                          {userData.rollNo && ` • ${userData.rollNo}`}
                         </p>
                       </div>
                     </div>
@@ -378,7 +439,7 @@ const Navbar = () => {
                         href={item.href}
                         className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                           isActive
-                            ? "bg-[#0057D9] bg-opacity-10 text-[#F5F5DC] dark:bg-[#4D8DFF] dark:bg-opacity-10 dark:text-[#4D8DFF]"
+                            ? "bg-[#0057D9] bg-opacity-10 text-[#0057D9] dark:bg-[#4D8DFF] dark:bg-opacity-10 dark:text-[#4D8DFF]"
                             : "text-[#475569] dark:text-[#CBD5E1] hover:bg-[#F1F5F9] dark:hover:bg-[#334155] hover:text-[#0057D9] dark:hover:text-white"
                         }`}
                       >
@@ -393,7 +454,6 @@ const Navbar = () => {
                   {isLoggedIn ? (
                     <>
                       {profileMenuItems.map((item, index) => {
-                        if (item.divider) return null;
                         const Icon = item.icon;
                         const isLogout = item.label === "Logout";
                         
