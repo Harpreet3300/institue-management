@@ -171,7 +171,11 @@ const Navbar = () => {
             >
               <Link href="/" className="flex items-center space-x-2 group">
                 <div className="w-10 h-10 bg-[#0057D9] rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-[#003E99]">
-                  <span className="text-white font-bold text-xl">EM</span>
+               <img
+               src="/logo.jpg"
+               alt="EduManage Logo"
+                className="w-full h-full object-contain"
+               />
                 </div>
                 <span className="text-xl font-bold text-[#111111] dark:text-white transition-colors duration-200">
                   EduManage
