@@ -81,8 +81,8 @@ export default function ProfilePage() {
 
     try {
       // Get data from localStorage - matching your login API response structure
-      const token = localStorage.getItem("token");
-      const studentStr = localStorage.getItem("student"); // Changed from studentData to student
+      const token = localStorage.getItem("studentToken");
+      const studentStr = localStorage.getItem("studentData"); // Changed from studentData to student
 
       // Check if token and student data exist
       if (!token || !studentStr) {
@@ -414,7 +414,7 @@ export default function ProfilePage() {
                 <div className="flex flex-wrap items-center gap-4 text-sm text-[#94A3B8] justify-center md:justify-start">
                   <span className="flex items-center">
                     <FiHash className="w-4 h-4 mr-1" />
-                    Roll No: {studentData.rollNo}
+                    Roll No: {"2025005"}
                   </span>
                   <span className="flex items-center">
                     <FaGraduationCap className="w-4 h-4 mr-1" />
@@ -429,40 +429,8 @@ export default function ProfilePage() {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-2">
-                {isEditing ? (
-                  <>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleSave}
-                      className="px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white font-medium rounded-xl transition-all duration-200 flex items-center space-x-2 shadow-lg"
-                    >
-                      <FiSave className="w-4 h-4" />
-                      <span>Save Changes</span>
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => {
-                        setIsEditing(false);
-                        setEditedData({ ...studentData });
-                      }}
-                      className="p-2.5 bg-red-500/20 hover:bg-red-500/30 rounded-xl transition-all duration-200"
-                    >
-                      <FiX className="w-5 h-5" />
-                    </motion.button>
-                  </>
-                ) : (
-                  <>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setIsEditing(true)}
-                      className="px-4 py-2.5 bg-[#0057D9] hover:bg-[#003E99] text-white font-medium rounded-xl transition-all duration-200 flex items-center space-x-2 shadow-lg shadow-[#0057D9]/20"
-                    >
-                      <FiEdit3 className="w-4 h-4" />
-                      <span>Edit Profile</span>
-                    </motion.button>
+               
+                 
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
@@ -470,10 +438,10 @@ export default function ProfilePage() {
                       className="p-2.5 bg-red-500/20 hover:bg-red-500/30 rounded-xl transition-all duration-200"
                       title="Logout"
                     >
-                      <FiLogOut className="w-5 h-5" />
+                      <FiLogOut className="w-8 h-8" />
                     </motion.button>
-                  </>
-                )}
+                  
+               
               </div>
             </div>
           </motion.div>
@@ -563,7 +531,7 @@ export default function ProfilePage() {
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {[
-                          { label: "Roll Number", value: studentData.rollNo },
+                          { label: "Roll Number", value: "2026005" },
                           { label: "Course", value: studentData.course },
                           { label: "Course Duration", value: studentData.courseDuration },
                           { label: "Role", value: studentData.role },
@@ -641,7 +609,7 @@ export default function ProfilePage() {
                     {[
                       { label: "Course", value: studentData.course },
                       { label: "Course Duration", value: studentData.courseDuration },
-                      { label: "Roll Number", value: studentData.rollNo },
+                      { label: "Roll Number", value: "2026005"},
                       { label: "Enrollment Date", value: formatDate(studentData.createdAt) },
                       { label: "Last Updated", value: formatDate(studentData.updatedAt) },
                     ].map((item, index) => (
