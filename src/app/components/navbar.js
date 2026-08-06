@@ -47,50 +47,40 @@ const Navbar = () => {
     { icon: FiLogOut, label: "Logout", href: "#", onClick: "logout" },
   ];
 
-  // Check login status and fetch user data
+  // Check login status from localStorage
   useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        // Check if user is logged in (from localStorage or API)
-        const token = localStorage.getItem('token') || localStorage.getItem('user');
-        const storedUser = localStorage.getItem('userData');
-        
-        if (token || storedUser) {
-          if (storedUser) {
-            const parsedUser = JSON.parse(storedUser);
-            setUserData(parsedUser);
-            setIsLoggedIn(true);
-          } else {
-            // Try to fetch user data from API
-            await fetchUserData();
-          }
-        } else {
-          setIsLoggedIn(false);
-          setUserData(null);
-        }
-      } catch (error) {
-        console.error('Auth check error:', error);
-        setIsLoggedIn(false);
-        setUserData(null);
-      }
-    };
-
     checkAuthStatus();
   }, []);
 
-  const fetchUserData = async () => {
+  const checkAuthStatus = () => {
     try {
-      const response = await fetch('/api/user/profile');
-      if (response.ok) {
-        const data = await response.json();
-        if (data.user) {
-          setUserData(data.user);
-          setIsLoggedIn(true);
-          localStorage.setItem('userData', JSON.stringify(data.user));
+      // Check multiple possible keys where auth data might be stored
+      const studentToken = localStorage.getItem("studentToken");
+      const token = localStorage.getItem("token");
+      const user = localStorage.getItem("user");
+      const studentData = localStorage.getItem("studentData");
+
+      // Check if any auth data exists
+      if (studentToken || token || user || studentData) {
+        // Try to get user data from localStorage
+        let parsedUserData = null;
+
+        if (studentData) {
+          parsedUserData = JSON.parse(studentData);
+        } else if (user) {
+          parsedUserData = JSON.parse(user);
         }
+
+        setUserData(parsedUserData);
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+        setUserData(null);
       }
     } catch (error) {
-      console.error('Failed to fetch user data:', error);
+      console.error("Auth check error:", error);
+      setIsLoggedIn(false);
+      setUserData(null);
     }
   };
 
@@ -98,9 +88,9 @@ const Navbar = () => {
   const getInitials = (name) => {
     if (!name) return "U";
     return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   };
@@ -109,10 +99,10 @@ const Navbar = () => {
   const getRoleDisplay = (role) => {
     if (!role) return "User";
     const roles = {
-      'student': 'Student',
-      'teacher': 'Teacher',
-      'admin': 'Admin',
-      'staff': 'Staff'
+      student: "Student",
+      teacher: "Teacher",
+      admin: "Admin",
+      staff: "Staff",
     };
     return roles[role.toLowerCase()] || role;
   };
@@ -143,18 +133,19 @@ const Navbar = () => {
 
   const handleLogout = () => {
     // Clear all auth data
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('userData');
-    localStorage.removeItem('authToken');
+    localStorage.removeItem("studentToken");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("studentData");
+    localStorage.removeItem("authToken");
     sessionStorage.clear();
-    
+
     setIsLoggedIn(false);
     setUserData(null);
     setIsProfileOpen(false);
-    
-    // Optional: Redirect to home page
-    window.location.href = '/';
+
+    // Redirect to home page
+    window.location.href = "/";
   };
 
   return (
@@ -193,7 +184,7 @@ const Navbar = () => {
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
                 const Icon = item.icon;
-                
+
                 return (
                   <motion.div
                     key={item.name}
@@ -208,7 +199,11 @@ const Navbar = () => {
                           : "text-[#475569] dark:text-[#CBD5E1] hover:text-[#0057D9] dark:hover:text-white"
                       }`}
                     >
-                      <Icon className={`w-4 h-4 ${isActive ? "text-[#0057D9] dark:text-[#4D8DFF]" : ""}`} />
+                      <Icon
+                        className={`w-4 h-4 ${
+                          isActive ? "text-[#0057D9] dark:text-[#4D8DFF]" : ""
+                        }`}
+                      />
                       <span>{item.name}</span>
                       {isActive && (
                         <motion.div
@@ -226,7 +221,7 @@ const Navbar = () => {
             {/* Desktop Right Section - Profile & Auth Buttons */}
             <div className="hidden lg:flex lg:items-center lg:space-x-3">
               {isLoggedIn && userData ? (
-                /* Profile Icon with Dropdown */
+                /* Profile Icon with Dropdown - Show when logged in */
                 <div className="relative" ref={profileRef}>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
@@ -245,7 +240,7 @@ const Navbar = () => {
                     </div>
                     <div className="hidden xl:block text-left">
                       <p className="text-sm font-semibold text-[#111111] dark:text-white leading-none">
-                        {userData.name || userData.fullName || 'User'}
+                        {userData.name || userData.fullName || "User"}
                       </p>
                       <p className="text-xs text-[#64748B] dark:text-[#94A3B8] leading-none mt-1">
                         {getRoleDisplay(userData.role)}
@@ -276,10 +271,10 @@ const Navbar = () => {
                             </div>
                             <div>
                               <p className="font-semibold text-[#111111] dark:text-white">
-                                {userData.name || userData.fullName || 'User'}
+                                {userData.name || userData.fullName || "User"}
                               </p>
                               <p className="text-xs text-[#64748B] dark:text-[#94A3B8]">
-                                {userData.email || 'user@example.com'}
+                                {userData.email || "user@example.com"}
                               </p>
                             </div>
                           </div>
@@ -287,14 +282,22 @@ const Navbar = () => {
                             <div className="flex items-center space-x-4 mt-3 pt-3 border-t border-[#E2E8F0]/50 dark:border-[#334155]/50">
                               {userData.course && (
                                 <div>
-                                  <p className="text-[10px] text-[#94A3B8] uppercase tracking-wider">Course</p>
-                                  <p className="text-xs font-medium text-[#111111] dark:text-white">{userData.course}</p>
+                                  <p className="text-[10px] text-[#94A3B8] uppercase tracking-wider">
+                                    Course
+                                  </p>
+                                  <p className="text-xs font-medium text-[#111111] dark:text-white">
+                                    {userData.course}
+                                  </p>
                                 </div>
                               )}
                               {userData.rollNo && (
                                 <div>
-                                  <p className="text-[10px] text-[#94A3B8] uppercase tracking-wider">Roll No</p>
-                                  <p className="text-xs font-medium text-[#111111] dark:text-white">{userData.rollNo}</p>
+                                  <p className="text-[10px] text-[#94A3B8] uppercase tracking-wider">
+                                    Roll No
+                                  </p>
+                                  <p className="text-xs font-medium text-[#111111] dark:text-white">
+                                    {userData.rollNo}
+                                  </p>
                                 </div>
                               )}
                             </div>
@@ -306,7 +309,7 @@ const Navbar = () => {
                           {profileMenuItems.map((item, index) => {
                             const Icon = item.icon;
                             const isLogout = item.label === "Logout";
-                            
+
                             return (
                               <Link
                                 key={index}
@@ -335,7 +338,7 @@ const Navbar = () => {
                   </AnimatePresence>
                 </div>
               ) : (
-                /* Auth Buttons when logged out */
+                /* Auth Buttons - Show when logged out */
                 <>
                   {authItems.map((item) => {
                     const Icon = item.icon;
@@ -366,15 +369,13 @@ const Navbar = () => {
             {/* Mobile Menu Button */}
             <div className="flex lg:hidden items-center space-x-2">
               {isLoggedIn && userData && (
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                <Link
+                  href="/profile"
                   className="p-2 rounded-lg text-[#475569] dark:text-[#CBD5E1] hover:bg-[#F1F5F9] dark:hover:bg-[#334155] transition-all duration-200"
                   aria-label="User Profile"
                 >
                   <FiUser className="w-5 h-5" />
-                </motion.button>
+                </Link>
               )}
 
               <motion.button
@@ -413,7 +414,7 @@ const Navbar = () => {
                       </div>
                       <div>
                         <p className="font-semibold text-sm text-[#111111] dark:text-white">
-                          {userData.name || userData.fullName || 'User'}
+                          {userData.name || userData.fullName || "User"}
                         </p>
                         <p className="text-xs text-[#64748B] dark:text-[#94A3B8]">
                           {getRoleDisplay(userData.role)}
@@ -427,7 +428,7 @@ const Navbar = () => {
                 {navItems.map((item, index) => {
                   const isActive = pathname === item.href;
                   const Icon = item.icon;
-                  
+
                   return (
                     <motion.div
                       key={item.name}
@@ -449,20 +450,23 @@ const Navbar = () => {
                     </motion.div>
                   );
                 })}
-                
+
                 <div className="border-t border-[#E2E8F0] dark:border-[#475569] pt-3 mt-3 space-y-2">
                   {isLoggedIn ? (
                     <>
                       {profileMenuItems.map((item, index) => {
                         const Icon = item.icon;
                         const isLogout = item.label === "Logout";
-                        
+
                         return (
                           <motion.div
                             key={index}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: (navItems.length + index) * 0.1, duration: 0.3 }}
+                            transition={{
+                              delay: (navItems.length + index) * 0.1,
+                              duration: 0.3,
+                            }}
                           >
                             <Link
                               href={item.href || "#"}
@@ -494,7 +498,10 @@ const Navbar = () => {
                           key={item.name}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: (navItems.length + index) * 0.1, duration: 0.3 }}
+                          transition={{
+                            delay: (navItems.length + index) * 0.1,
+                            duration: 0.3,
+                          }}
                         >
                           <Link
                             href={item.href}
