@@ -527,44 +527,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="relative bg-gradient-to-br from-[#0057D9] to-[#003E99] py-20 overflow-hidden">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.1) 1px, transparent 0)`,
-          backgroundSize: '40px 40px'
-        }} />
-        
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-              Let's Work Together!
-            </h2>
-            <p className="text-[#CBD5E1] text-lg mb-8 max-w-2xl mx-auto">
-              I'm always open to new opportunities and collaborations. 
-              Feel free to reach out if you'd like to connect!
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                href="/contact"
-                className="px-8 py-4 bg-white text-[#0057D9] font-semibold rounded-xl hover:bg-[#F8FAFC] transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-              >
-                Contact Me
-              </Link>
-              <Link
-                href="/projects"
-                className="px-8 py-4 border-2 border-white/30 text-white font-semibold rounded-xl hover:bg-white/10 transition-all duration-300 hover:-translate-y-0.5"
-              >
-                View Projects
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+      
     </div>
   );
 }
