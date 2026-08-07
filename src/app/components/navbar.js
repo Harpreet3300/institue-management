@@ -169,18 +169,21 @@ const Navbar = () => {
               whileTap={{ scale: 0.98 }}
               className="flex-shrink-0"
             >
-              <Link href="/" className="flex items-center space-x-2 group">
-                <div className="w-10 h-10 bg-[#0057D9] rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-[#003E99]">
-               <img
-               src="/logo.jpg"
-               alt="EduManage Logo"
-                className="w-full h-full object-contain"
-               />
-                </div>
-                <span className="text-xl font-bold text-[#111111] dark:text-white transition-colors duration-200">
-                  EduManage
-                </span>
-              </Link>
+              <Link href="/" className="flex items-center space-x-3 group">
+  {/* Logo Icon - Removed blue background, transparent, 2x bigger */}
+  <div className="w-12 h-12 flex items-center justify-center transition-all duration-200 group-hover:scale-105">
+    <img
+      src="/logo.png"
+      alt="EduManage Logo"
+      className="w-full h-full object-contain"
+    />
+  </div>
+  
+  {/* Brand Text - Navy Blue */}
+  <span className="text-xl font-bold text-[#1E3A8A] dark:text-white transition-colors duration-200">
+    EduManage
+  </span>
+</Link>
             </motion.div>
 
             {/* Desktop Navigation */}
