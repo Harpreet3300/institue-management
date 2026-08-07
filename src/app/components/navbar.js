@@ -164,22 +164,22 @@ const Navbar = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex items-center justify-between h-full">
             {/* Logo */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-shrink-0"
-            >
-             <Link href="/" className="flex items-center group">
-            {/* Logo Icon with White Background */}
-         <div className="w-100 h-16 flex items-left justify-left transition-all duration-200 group-hover:scale-105">
-           <img
-               src="/logo.png"
-              alt="EduManage Logo"
-              className="w-full h-full object-contain p-0.5"
-             />
-           </div>
-          </Link>
-            </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex-shrink-0"
+          >
+            <Link href="/" className="flex items-center">
+            {/* Logo Icon - Responsive */}
+           <div className="w-full sm:w-44 md:w-52 lg:w-60 xl:w-72 h-10 sm:h-12 md:h-14 lg:h-16 flex transition-all duration-200">
+          <img
+            src="/logo.png"
+            alt="EduManage Logo"
+            className=" h-full object-contain object-left p-0.5"
+          />
+          </div>  
+            </Link>
+          </motion.div>
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex lg:items-center lg:space-x-1">
@@ -442,7 +442,7 @@ const Navbar = () => {
                         href={item.href}
                         className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                           isActive
-                            ? "bg-[#0057D9] bg-opacity-10 text-[#0057D9] dark:bg-[#4D8DFF] dark:bg-opacity-10 dark:text-[#4D8DFF]"
+                            ? "bg-[#0057D9] bg-opacity-10 text-[#e8e9f6] dark:bg-[#4D8DFF] dark:bg-opacity-10 dark:text-[#4D8DFF]"
                             : "text-[#475569] dark:text-[#CBD5E1] hover:bg-[#F1F5F9] dark:hover:bg-[#334155] hover:text-[#0057D9] dark:hover:text-white"
                         }`}
                       >
