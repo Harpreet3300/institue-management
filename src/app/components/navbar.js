@@ -156,30 +156,29 @@ const Navbar = () => {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled
-            ? "bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-lg shadow-lg"
-            : "bg-white dark:bg-[#0F172A] shadow-sm"
-        } border-b border-[#E2E8F0] dark:border-[#475569]`}
+            ? "bg-white/95 backdrop-blur-lg shadow-lg"
+            : "bg-white/95 backdrop-blur-lg shadow-lg"
+        } border-b border-[#E2E8F0]`}
         style={{ height: "72px" }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex items-center justify-between h-full">
             {/* Logo */}
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex-shrink-0"
-          >
-            <Link href="/" className="flex items-center">
-            {/* Logo Icon - Responsive */}
-           <div className="w-full sm:w-44 md:w-52 lg:w-60 xl:w-72 h-10 sm:h-12 md:h-14 lg:h-16 flex transition-all duration-200">
-          <img
-            src="/logo.png"
-            alt="EduManage Logo"
-            className=" h-full object-contain object-left p-0.5"
-          />
-          </div>  
-            </Link>
-          </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-shrink-0"
+            >
+              <Link href="/" className="flex items-center">
+                <div className="w-full sm:w-44 md:w-52 lg:w-60 xl:w-72 h-10 sm:h-12 md:h-14 lg:h-16 flex transition-all duration-200">
+                  <img
+                    src="/logo.png"
+                    alt="EduManage Logo"
+                    className="h-full object-contain object-left p-0.5"
+                  />
+                </div>
+              </Link>
+            </motion.div>
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex lg:items-center lg:space-x-1">
@@ -197,20 +196,20 @@ const Navbar = () => {
                       href={item.href}
                       className={`relative px-3 py-2 rounded-lg text-sm font-medium flex items-center space-x-1.5 transition-all duration-200 group ${
                         isActive
-                          ? "text-[#0057D9] dark:text-[#4D8DFF]"
-                          : "text-[#475569] dark:text-[#CBD5E1] hover:text-[#0057D9] dark:hover:text-white"
+                          ? "text-[#0057D9]"
+                          : "text-[#475569] hover:text-[#0057D9]"
                       }`}
                     >
                       <Icon
                         className={`w-4 h-4 ${
-                          isActive ? "text-[#0057D9] dark:text-[#4D8DFF]" : ""
+                          isActive ? "text-[#0057D9]" : ""
                         }`}
                       />
                       <span>{item.name}</span>
                       {isActive && (
                         <motion.div
                           layoutId="activeTab"
-                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0057D9] dark:bg-[#4D8DFF] rounded-full"
+                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0057D9] rounded-full"
                           transition={{ duration: 0.2 }}
                         />
                       )}
@@ -231,8 +230,8 @@ const Navbar = () => {
                     onClick={() => setIsProfileOpen(!isProfileOpen)}
                     className={`flex items-center space-x-2 p-1.5 pr-3 rounded-xl transition-all duration-200 ${
                       isProfileOpen
-                        ? "bg-[#F1F5F9] dark:bg-[#1E293B]"
-                        : "hover:bg-[#F1F5F9] dark:hover:bg-[#1E293B]"
+                        ? "bg-[#F1F5F9]"
+                        : "hover:bg-[#F1F5F9]"
                     }`}
                     aria-label="User Profile"
                   >
@@ -241,10 +240,10 @@ const Navbar = () => {
                       {getInitials(userData.name || userData.fullName)}
                     </div>
                     <div className="hidden xl:block text-left">
-                      <p className="text-sm font-semibold text-[#111111] dark:text-white leading-none">
+                      <p className="text-sm font-semibold text-[#111111] leading-none">
                         {userData.name || userData.fullName || "User"}
                       </p>
-                      <p className="text-xs text-[#64748B] dark:text-[#94A3B8] leading-none mt-1">
+                      <p className="text-xs text-[#64748B] leading-none mt-1">
                         {getRoleDisplay(userData.role)}
                       </p>
                     </div>
@@ -263,31 +262,31 @@ const Navbar = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute right-0 mt-2 w-72 bg-white dark:bg-[#1E293B] rounded-2xl border border-[#E2E8F0] dark:border-[#334155] shadow-xl overflow-hidden"
+                        className="absolute right-0 mt-2 w-72 bg-white rounded-2xl border border-[#E2E8F0] shadow-xl overflow-hidden"
                       >
                         {/* User Info Header */}
-                        <div className="p-4 bg-gradient-to-br from-[#0057D9]/5 to-[#003E99]/5 border-b border-[#E2E8F0] dark:border-[#334155]">
+                        <div className="p-4 bg-gradient-to-br from-[#0057D9]/5 to-[#003E99]/5 border-b border-[#E2E8F0]">
                           <div className="flex items-center space-x-3">
                             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0057D9] to-[#003E99] flex items-center justify-center text-white font-bold text-lg shadow-lg">
                               {getInitials(userData.name || userData.fullName)}
                             </div>
                             <div>
-                              <p className="font-semibold text-[#111111] dark:text-white">
+                              <p className="font-semibold text-[#111111]">
                                 {userData.name || userData.fullName || "User"}
                               </p>
-                              <p className="text-xs text-[#64748B] dark:text-[#94A3B8]">
+                              <p className="text-xs text-[#64748B]">
                                 {userData.email || "user@example.com"}
                               </p>
                             </div>
                           </div>
                           {(userData.course || userData.rollNo) && (
-                            <div className="flex items-center space-x-4 mt-3 pt-3 border-t border-[#E2E8F0]/50 dark:border-[#334155]/50">
+                            <div className="flex items-center space-x-4 mt-3 pt-3 border-t border-[#E2E8F0]/50">
                               {userData.course && (
                                 <div>
                                   <p className="text-[10px] text-[#94A3B8] uppercase tracking-wider">
                                     Course
                                   </p>
-                                  <p className="text-xs font-medium text-[#111111] dark:text-white">
+                                  <p className="text-xs font-medium text-[#111111]">
                                     {userData.course}
                                   </p>
                                 </div>
@@ -297,7 +296,7 @@ const Navbar = () => {
                                   <p className="text-[10px] text-[#94A3B8] uppercase tracking-wider">
                                     Roll No
                                   </p>
-                                  <p className="text-xs font-medium text-[#111111] dark:text-white">
+                                  <p className="text-xs font-medium text-[#111111]">
                                     {userData.rollNo}
                                   </p>
                                 </div>
@@ -325,8 +324,8 @@ const Navbar = () => {
                                 }}
                                 className={`flex items-center space-x-3 px-4 py-2.5 mx-2 rounded-xl text-sm transition-all duration-200 ${
                                   isLogout
-                                    ? "text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
-                                    : "text-[#475569] dark:text-[#CBD5E1] hover:bg-[#F1F5F9] dark:hover:bg-[#0F172A] hover:text-[#0057D9] dark:hover:text-[#4D8DFF]"
+                                    ? "text-red-500 hover:bg-red-50"
+                                    : "text-[#475569] hover:bg-[#F1F5F9] hover:text-[#0057D9]"
                                 }`}
                               >
                                 <Icon className="w-4 h-4" />
@@ -355,7 +354,7 @@ const Navbar = () => {
                           className={`flex items-center space-x-1.5 px-4 py-2 rounded-[12px] text-sm font-medium transition-all duration-200 ${
                             item.variant === "primary"
                               ? "bg-[#0057D9] text-white hover:bg-[#003E99] shadow-md hover:shadow-lg"
-                              : "border-2 border-[#0057D9] text-[#0057D9] hover:bg-[#0057D9] hover:text-white dark:border-[#4D8DFF] dark:text-[#4D8DFF] dark:hover:bg-[#4D8DFF] dark:hover:text-white"
+                              : "border-2 border-[#0057D9] text-[#0057D9] hover:bg-[#0057D9] hover:text-white"
                           }`}
                         >
                           <Icon className="w-4 h-4" />
@@ -373,7 +372,7 @@ const Navbar = () => {
               {isLoggedIn && userData && (
                 <Link
                   href="/profile"
-                  className="p-2 rounded-lg text-[#475569] dark:text-[#CBD5E1] hover:bg-[#F1F5F9] dark:hover:bg-[#334155] transition-all duration-200"
+                  className="p-2 rounded-lg text-[#475569] hover:bg-[#F1F5F9] transition-all duration-200"
                   aria-label="User Profile"
                 >
                   <FiUser className="w-5 h-5" />
@@ -383,7 +382,7 @@ const Navbar = () => {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setIsOpen(!isOpen)}
-                className="p-2 rounded-lg text-[#475569] dark:text-[#CBD5E1] hover:bg-[#F1F5F9] dark:hover:bg-[#334155] transition-all duration-200"
+                className="p-2 rounded-lg text-[#475569] hover:bg-[#F1F5F9] transition-all duration-200"
                 aria-label="Toggle menu"
               >
                 {isOpen ? (
@@ -404,21 +403,21 @@ const Navbar = () => {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="lg:hidden bg-white dark:bg-[#0F172A] border-b border-[#E2E8F0] dark:border-[#475569] shadow-lg overflow-hidden"
+              className="lg:hidden bg-white border-b border-[#E2E8F0] shadow-lg overflow-hidden"
             >
               <div className="px-4 py-4 space-y-2">
                 {/* Mobile User Info - if logged in */}
                 {isLoggedIn && userData && (
-                  <div className="p-3 mb-3 bg-gradient-to-br from-[#0057D9]/5 to-[#003E99]/5 rounded-2xl border border-[#E2E8F0] dark:border-[#334155]">
+                  <div className="p-3 mb-3 bg-gradient-to-br from-[#0057D9]/5 to-[#003E99]/5 rounded-2xl border border-[#E2E8F0]">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0057D9] to-[#003E99] flex items-center justify-center text-white font-bold text-sm">
                         {getInitials(userData.name || userData.fullName)}
                       </div>
                       <div>
-                        <p className="font-semibold text-sm text-[#111111] dark:text-white">
+                        <p className="font-semibold text-sm text-[#111111]">
                           {userData.name || userData.fullName || "User"}
                         </p>
-                        <p className="text-xs text-[#64748B] dark:text-[#94A3B8]">
+                        <p className="text-xs text-[#64748B]">
                           {getRoleDisplay(userData.role)}
                           {userData.rollNo && ` • ${userData.rollNo}`}
                         </p>
@@ -442,8 +441,8 @@ const Navbar = () => {
                         href={item.href}
                         className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                           isActive
-                            ? "bg-[#0057D9] bg-opacity-10 text-[#e8e9f6] dark:bg-[#4D8DFF] dark:bg-opacity-10 dark:text-[#4D8DFF]"
-                            : "text-[#475569] dark:text-[#CBD5E1] hover:bg-[#F1F5F9] dark:hover:bg-[#334155] hover:text-[#0057D9] dark:hover:text-white"
+                            ? "bg-[#0057D9] bg-opacity-10 text-[#e8e9f6]"
+                            : "text-[#475569] hover:bg-[#F1F5F9] hover:text-[#0057D9]"
                         }`}
                       >
                         <Icon className="w-5 h-5" />
@@ -453,7 +452,7 @@ const Navbar = () => {
                   );
                 })}
 
-                <div className="border-t border-[#E2E8F0] dark:border-[#475569] pt-3 mt-3 space-y-2">
+                <div className="border-t border-[#E2E8F0] pt-3 mt-3 space-y-2">
                   {isLoggedIn ? (
                     <>
                       {profileMenuItems.map((item, index) => {
@@ -481,8 +480,8 @@ const Navbar = () => {
                               }}
                               className={`flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
                                 isLogout
-                                  ? "text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
-                                  : "text-[#475569] dark:text-[#CBD5E1] hover:bg-[#F1F5F9] dark:hover:bg-[#334155]"
+                                  ? "text-red-500 hover:bg-red-50"
+                                  : "text-[#475569] hover:bg-[#F1F5F9]"
                               }`}
                             >
                               <Icon className="w-5 h-5" />
@@ -510,7 +509,7 @@ const Navbar = () => {
                             className={`flex items-center justify-center space-x-2 px-4 py-3 rounded-[12px] font-medium transition-all duration-200 ${
                               item.variant === "primary"
                                 ? "bg-[#0057D9] text-white hover:bg-[#003E99]"
-                                : "border-2 border-[#0057D9] text-[#0057D9] hover:bg-[#0057D9] hover:text-white dark:border-[#4D8DFF] dark:text-[#4D8DFF] dark:hover:bg-[#4D8DFF] dark:hover:text-white"
+                                : "border-2 border-[#0057D9] text-[#0057D9] hover:bg-[#0057D9] hover:text-white"
                             }`}
                           >
                             <Icon className="w-5 h-5" />
