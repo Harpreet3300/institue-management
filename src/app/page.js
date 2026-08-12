@@ -1,6 +1,7 @@
 // app/page.jsx
 "use client";
 
+import Review from "@/src/app/components/review";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
@@ -468,6 +469,7 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+      <Review />
     </div>
   );
 }
