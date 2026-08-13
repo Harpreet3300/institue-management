@@ -16,15 +16,11 @@ import {
   MessageSquare,
   Calendar,
   ChevronDown,
+  ArrowUp,
   CheckCircle,
   AlertCircle,
   Send,
-  Quote,
-  Pencil,
-  Trash2,
-  Save,
-  RotateCcw,
-  MoreVertical
+  Quote
 } from "lucide-react";
 
 export default function ReviewComponent() {
@@ -38,8 +34,6 @@ export default function ReviewComponent() {
   const [confirmationMessage, setConfirmationMessage] = useState('');
   const [confirmationType, setConfirmationType] = useState('success');
   const [focusedField, setFocusedField] = useState(null);
-  const [editingReviewId, setEditingReviewId] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     category: 'visitor',
@@ -91,14 +85,8 @@ export default function ReviewComponent() {
     setIsSubmitting(true);
     
     try {
-      const url = editingReviewId 
-        ? `/api/review/edit/${editingReviewId}`
-        : '/api/review/add';
-      
-      const method = editingReviewId ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method: method,
+      const response = await fetch('/api/review/add', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -114,66 +102,15 @@ export default function ReviewComponent() {
           rating: 5
         });
         setShowForm(false);
-        setEditingReviewId(null);
-        showConfirmationPopup(
-          editingReviewId ? 'Review updated successfully!' : 'Review submitted successfully!'
-        );
+        showConfirmationPopup('Review submitted successfully!');
       } else {
-        showConfirmationPopup(
-          editingReviewId ? 'Failed to update review.' : 'Failed to submit review.',
-          'error'
-        );
+        showConfirmationPopup('Failed to submit review. Please try again.', 'error');
       }
     } catch (error) {
-      showConfirmationPopup('Error saving review. Please try again.', 'error');
+      showConfirmationPopup('Error submitting review. Please try again.', 'error');
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleEditReview = (review) => {
-    setFormData({
-      name: review.name,
-      category: review.category,
-      review: review.review,
-      rating: review.rating
-    });
-    setEditingReviewId(review._id);
-    setShowForm(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleDeleteReview = async (reviewId) => {
-    if (!confirm('Are you sure you want to delete this review?')) return;
-    
-    setIsDeleting(true);
-    try {
-      const response = await fetch(`/api/review/delete/${reviewId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        await fetchReviews();
-        showConfirmationPopup('Review deleted successfully!');
-      } else {
-        showConfirmationPopup('Failed to delete review.', 'error');
-      }
-    } catch (error) {
-      showConfirmationPopup('Error deleting review.', 'error');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setShowForm(false);
-    setEditingReviewId(null);
-    setFormData({
-      name: '',
-      category: 'visitor',
-      review: '',
-      rating: 5
-    });
   };
 
   const handleLoadMore = () => {
@@ -190,6 +127,14 @@ export default function ReviewComponent() {
     }
   };
 
+  const getCategoryColor = (category) => {
+    switch(category) {
+      case 'student': return '#0057D9';
+      case 'staff': return '#00A86B';
+      default: return '#7C3AED';
+    }
+  };
+
   const getCategoryGradient = (category) => {
     switch(category) {
       case 'student': return 'linear-gradient(135deg, #0057D9, #4D8DFF)';
@@ -198,9 +143,7 @@ export default function ReviewComponent() {
     }
   };
 
-  const StarRating = ({ rating, interactive = false, onChange = null, size = 'sm' }) => {
-    const starSize = size === 'lg' ? 'w-8 h-8' : 'w-5 h-5';
-    
+  const StarRating = ({ rating, interactive = false, onChange = null }) => {
     return (
       <div className="flex items-center space-x-0.5">
         {[1, 2, 3, 4, 5].map((star) => (
@@ -214,7 +157,7 @@ export default function ReviewComponent() {
             disabled={!interactive}
           >
             <Star
-              className={`${starSize} transition-all duration-300 ${
+              className={`w-5 h-5 transition-all duration-300 ${
                 star <= rating 
                   ? 'fill-yellow-400 text-yellow-400' 
                   : 'text-gray-300'
@@ -222,9 +165,7 @@ export default function ReviewComponent() {
             />
           </motion.button>
         ))}
-        {!interactive && (
-          <span className="ml-2 text-sm font-semibold text-gray-600">{rating.toFixed(1)}</span>
-        )}
+        <span className="ml-2 text-sm font-semibold text-gray-600">{rating.toFixed(1)}</span>
       </div>
     );
   };
@@ -391,20 +332,7 @@ export default function ReviewComponent() {
           </p>
 
           <motion.button
-            onClick={() => {
-              if (showForm) {
-                handleCancelEdit();
-              } else {
-                setShowForm(true);
-                setEditingReviewId(null);
-                setFormData({
-                  name: '',
-                  category: 'visitor',
-                  review: '',
-                  rating: 5
-                });
-              }
-            }}
+            onClick={() => setShowForm(!showForm)}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             className="mt-6 h-[52px] px-8 rounded-2xl font-semibold text-white flex items-center justify-center space-x-2 mx-auto transition-all duration-300 hover:shadow-lg"
@@ -418,7 +346,7 @@ export default function ReviewComponent() {
             {showForm ? (
               <>
                 <X className="w-5 h-5" />
-                <span>{editingReviewId ? 'Cancel Edit' : 'Cancel Review'}</span>
+                <span>Cancel Review</span>
               </>
             ) : (
               <>
@@ -445,38 +373,17 @@ export default function ReviewComponent() {
                   boxShadow: '20px 20px 60px #c5cdd8, -20px -20px 60px #ffffff, inset 1px 1px 2px rgba(255,255,255,0.5)',
                 }}
               >
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center space-x-3">
-                    <div 
-                      className="w-10 h-10 rounded-xl flex items-center justify-center"
-                      style={{
-                        background: editingReviewId 
-                          ? 'linear-gradient(135deg, #f59e0b, #d97706)'
-                          : 'linear-gradient(135deg, #0057D9, #003E99)',
-                        boxShadow: '4px 4px 8px #c5cdd8, -4px -4px 8px #ffffff',
-                      }}
-                    >
-                      {editingReviewId ? (
-                        <Pencil className="w-5 h-5 text-white" />
-                      ) : (
-                        <Sparkles className="w-5 h-5 text-white" />
-                      )}
-                    </div>
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      {editingReviewId ? 'Edit Your Review' : 'Share Your Experience'}
-                    </h2>
+                <div className="flex items-center space-x-3 mb-6">
+                  <div 
+                    className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(135deg, #0057D9, #003E99)',
+                      boxShadow: '4px 4px 8px #c5cdd8, -4px -4px 8px #ffffff',
+                    }}
+                  >
+                    <Sparkles className="w-5 h-5 text-white" />
                   </div>
-                  {editingReviewId && (
-                    <motion.button
-                      onClick={handleCancelEdit}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="text-sm text-gray-500 hover:text-gray-700 flex items-center space-x-1"
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                      <span>Reset</span>
-                    </motion.button>
-                  )}
+                  <h2 className="text-2xl font-bold text-gray-900">Share Your Experience</h2>
                 </div>
 
                 <form onSubmit={handleSubmitReview} className="space-y-6">
@@ -486,7 +393,7 @@ export default function ReviewComponent() {
                         Your Name
                       </label>
                       <div 
-                        className={`relative rounded-2xl transition-all duration-300 ${
+                        className={`rounded-2xl transition-all duration-300 ${
                           focusedField === 'name' 
                             ? 'shadow-[inset_4px_4px_8px_#c5cdd8,inset_-4px_-4px_8px_#ffffff]' 
                             : 'shadow-[4px_4px_8px_#c5cdd8,-4px_-4px_8px_#ffffff]'
@@ -516,7 +423,7 @@ export default function ReviewComponent() {
                         You are a
                       </label>
                       <div 
-                        className={`relative rounded-2xl transition-all duration-300 ${
+                        className={`rounded-2xl transition-all duration-300 ${
                           focusedField === 'category' 
                             ? 'shadow-[inset_4px_4px_8px_#c5cdd8,inset_-4px_-4px_8px_#ffffff]' 
                             : 'shadow-[4px_4px_8px_#c5cdd8,-4px_-4px_8px_#ffffff]'
@@ -556,7 +463,6 @@ export default function ReviewComponent() {
                         rating={formData.rating} 
                         interactive={true}
                         onChange={(rating) => setFormData({...formData, rating})}
-                        size="lg"
                       />
                     </div>
                   </div>
@@ -566,7 +472,7 @@ export default function ReviewComponent() {
                       Your Review
                     </label>
                     <div 
-                      className={`relative rounded-2xl transition-all duration-300 ${
+                      className={`rounded-2xl transition-all duration-300 ${
                         focusedField === 'review' 
                           ? 'shadow-[inset_4px_4px_8px_#c5cdd8,inset_-4px_-4px_8px_#ffffff]' 
                           : 'shadow-[4px_4px_8px_#c5cdd8,-4px_-4px_8px_#ffffff]'
@@ -586,59 +492,29 @@ export default function ReviewComponent() {
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
-                    <motion.button
-                      type="submit"
-                      disabled={isSubmitting}
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                      className="flex-1 h-[52px] rounded-2xl font-semibold text-white flex items-center justify-center space-x-2 transition-all duration-300 disabled:opacity-70"
-                      style={{
-                        background: editingReviewId 
-                          ? 'linear-gradient(135deg, #f59e0b, #d97706)'
-                          : 'linear-gradient(135deg, #0057D9, #003E99)',
-                        boxShadow: '8px 8px 16px #c5cdd8, -8px -8px 16px #ffffff',
-                      }}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          <span>Saving...</span>
-                        </>
-                      ) : (
-                        <>
-                          {editingReviewId ? (
-                            <>
-                              <Save className="w-5 h-5" />
-                              <span>Update Review</span>
-                            </>
-                          ) : (
-                            <>
-                              <Send className="w-5 h-5" />
-                              <span>Submit Review</span>
-                            </>
-                          )}
-                        </>
-                      )}
-                    </motion.button>
-                    
-                    {editingReviewId && (
-                      <motion.button
-                        type="button"
-                        onClick={handleCancelEdit}
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        className="px-6 h-[52px] rounded-2xl font-semibold text-gray-600 flex items-center justify-center space-x-2 transition-all duration-300"
-                        style={{
-                          background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
-                          boxShadow: '4px 4px 8px #c5cdd8, -4px -4px 8px #ffffff',
-                        }}
-                      >
-                        <X className="w-5 h-5" />
-                        <span>Cancel</span>
-                      </motion.button>
+                  <motion.button
+                    type="submit"
+                    disabled={isSubmitting}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    className="w-full h-[52px] rounded-2xl font-semibold text-white flex items-center justify-center space-x-2 transition-all duration-300 disabled:opacity-70"
+                    style={{
+                      background: 'linear-gradient(135deg, #0057D9, #003E99)',
+                      boxShadow: '8px 8px 16px #c5cdd8, -8px -8px 16px #ffffff',
+                    }}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Submitting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5" />
+                        <span>Submit Review</span>
+                      </>
                     )}
-                  </div>
+                  </motion.button>
                 </form>
               </div>
             </motion.div>
@@ -649,6 +525,7 @@ export default function ReviewComponent() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {displayedReviews.map((review, index) => {
             const CategoryIcon = getCategoryIcon(review.category);
+            const categoryColor = getCategoryColor(review.category);
             const categoryGradient = getCategoryGradient(review.category);
             
             return (
@@ -658,36 +535,12 @@ export default function ReviewComponent() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.08 }}
                 whileHover={{ y: -5 }}
-                className="rounded-2xl overflow-hidden flex flex-col relative group"
+                className="rounded-2xl overflow-hidden flex flex-col"
                 style={{
                   background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
                   boxShadow: '12px 12px 24px #c5cdd8, -12px -12px 24px #ffffff',
                 }}
               >
-                {/* Edit/Delete Actions */}
-                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-                  <div className="flex space-x-1">
-                    <motion.button
-                      onClick={() => handleEditReview(review)}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="p-1.5 rounded-lg bg-white/80 backdrop-blur-sm shadow-md hover:bg-blue-50 transition-colors"
-                      title="Edit review"
-                    >
-                      <Pencil className="w-4 h-4 text-[#0057D9]" />
-                    </motion.button>
-                    <motion.button
-                      onClick={() => handleDeleteReview(review._id)}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="p-1.5 rounded-lg bg-white/80 backdrop-blur-sm shadow-md hover:bg-red-50 transition-colors"
-                      title="Delete review"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </motion.button>
-                  </div>
-                </div>
-
                 <div className="p-6 flex-grow">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center space-x-3">
@@ -739,9 +592,10 @@ export default function ReviewComponent() {
                       })}
                     </span>
                   </div>
-                  {review.updatedAt && review.updatedAt !== review.createdAt && (
-                    <span className="text-xs text-gray-400 italic">(edited)</span>
-                  )}
+                  <div className="flex items-center space-x-1 text-[#0057D9]">
+                    <Heart className="w-4 h-4 fill-[#0057D9]/20 text-[#0057D9]/40" />
+                    <span className="text-xs font-medium">Helpful</span>
+                  </div>
                 </div>
               </motion.div>
             );
@@ -817,16 +671,7 @@ export default function ReviewComponent() {
               <h3 className="text-2xl font-bold text-gray-900 mb-3">No Reviews Yet</h3>
               <p className="text-gray-500 mb-6">Be the first to share your experience with our community!</p>
               <motion.button
-                onClick={() => {
-                  setShowForm(true);
-                  setEditingReviewId(null);
-                  setFormData({
-                    name: '',
-                    category: 'visitor',
-                    review: '',
-                    rating: 5
-                  });
-                }}
+                onClick={() => setShowForm(true)}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 className="h-[48px] px-8 rounded-2xl font-semibold text-white flex items-center justify-center space-x-2 mx-auto"
@@ -885,3 +730,4 @@ export default function ReviewComponent() {
       `}</style>
     </div>
   );
+}
