@@ -1,6 +1,27 @@
 "use client";
+
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Star, 
+  Plus, 
+  X, 
+  Loader2,
+  User,
+  GraduationCap,
+  Users,
+  Sparkles,
+  Heart,
+  MessageSquare,
+  Calendar,
+  ChevronDown,
+  ArrowUp,
+  CheckCircle,
+  AlertCircle,
+  Send,
+  Quote
+} from "lucide-react";
 
 export default function ReviewComponent() {
   const [reviews, setReviews] = useState([]);
@@ -11,7 +32,8 @@ export default function ReviewComponent() {
   const [showForm, setShowForm] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirmationMessage, setConfirmationMessage] = useState('');
-  const [confirmationType, setConfirmationType] = useState('success'); // 'success' or 'error'
+  const [confirmationType, setConfirmationType] = useState('success');
+  const [focusedField, setFocusedField] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     category: 'visitor',
@@ -37,7 +59,6 @@ export default function ReviewComponent() {
       setIsLoading(true);
       const response = await fetch('/api/review');
       const data = await response.json();
-      // Sort by date descending (newest first)
       const sortedReviews = data.reviews.sort((a, b) => 
         new Date(b.createdAt) - new Date(a.createdAt)
       );
@@ -54,8 +75,6 @@ export default function ReviewComponent() {
     setConfirmationMessage(message);
     setConfirmationType(type);
     setShowConfirmation(true);
-    
-    // Auto-hide after 3 seconds
     setTimeout(() => {
       setShowConfirmation(false);
     }, 3000);
@@ -75,7 +94,6 @@ export default function ReviewComponent() {
       });
 
       if (response.ok) {
-        // Refresh reviews
         await fetchReviews();
         setFormData({
           name: '',
@@ -86,11 +104,9 @@ export default function ReviewComponent() {
         setShowForm(false);
         showConfirmationPopup('Review submitted successfully!');
       } else {
-        console.error('Failed to submit review');
         showConfirmationPopup('Failed to submit review. Please try again.', 'error');
       }
     } catch (error) {
-      console.error('Error submitting review:', error);
       showConfirmationPopup('Error submitting review. Please try again.', 'error');
     } finally {
       setIsSubmitting(false);
@@ -103,324 +119,608 @@ export default function ReviewComponent() {
 
   const hasMoreReviews = displayedReviews.length < reviews.length;
 
-  const StarRating = ({ rating }) => {
-    return (
-      <div className="flex items-center">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <svg
-            key={star}
-            className={`w-5 h-5 ${star <= rating ? 'text-yellow-400' : 'text-gray-300'} 
-              transition-all duration-300 ${star <= rating ? 'scale-110' : ''}`}
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-          </svg>
-        ))}
-        <span className="ml-2 text-sm font-medium text-gray-600">{rating.toFixed(1)}</span>
-      </div>
-    );
+  const getCategoryIcon = (category) => {
+    switch(category) {
+      case 'student': return GraduationCap;
+      case 'staff': return Users;
+      default: return User;
+    }
   };
 
-  const RatingInput = ({ value, onChange }) => {
+  const getCategoryColor = (category) => {
+    switch(category) {
+      case 'student': return '#0057D9';
+      case 'staff': return '#00A86B';
+      default: return '#7C3AED';
+    }
+  };
+
+  const getCategoryGradient = (category) => {
+    switch(category) {
+      case 'student': return 'linear-gradient(135deg, #0057D9, #4D8DFF)';
+      case 'staff': return 'linear-gradient(135deg, #00A86B, #34D399)';
+      default: return 'linear-gradient(135deg, #7C3AED, #A78BFA)';
+    }
+  };
+
+  const StarRating = ({ rating, interactive = false, onChange = null }) => {
     return (
-      <div className="flex items-center space-x-1">
+      <div className="flex items-center space-x-0.5">
         {[1, 2, 3, 4, 5].map((star) => (
-          <button
+          <motion.button
             key={star}
             type="button"
-            onClick={() => onChange(star)}
-            className="focus:outline-none"
+            onClick={() => interactive && onChange && onChange(star)}
+            whileHover={interactive ? { scale: 1.2 } : {}}
+            whileTap={interactive ? { scale: 0.9 } : {}}
+            className={`${interactive ? 'cursor-pointer' : 'cursor-default'} focus:outline-none`}
+            disabled={!interactive}
           >
-            <svg
-              className={`w-8 h-8 cursor-pointer transition-all duration-300 ${star <= value ? 'text-yellow-400 transform scale-110' : 'text-gray-300'} hover:scale-110`}
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-          </button>
+            <Star
+              className={`w-5 h-5 transition-all duration-300 ${
+                star <= rating 
+                  ? 'fill-yellow-400 text-yellow-400' 
+                  : 'text-gray-300'
+              } ${interactive ? 'hover:scale-110' : ''}`}
+            />
+          </motion.button>
         ))}
-        <span className="ml-2 text-sm font-medium text-gray-600">{value}.0</span>
+        <span className="ml-2 text-sm font-semibold text-gray-600">{rating.toFixed(1)}</span>
       </div>
     );
   };
 
-  // Confirmation Popup Component
+  // Confirmation Popup
   const ConfirmationPopup = () => {
     if (!showConfirmation) return null;
     
     return (
-      <div className="fixed top-4 right-4 z-50 animate-slide-in">
-        <div className={`rounded-lg p-4 shadow-lg border-l-4 ${
-          confirmationType === 'success' 
-            ? 'bg-green-50 border-green-500 text-green-700' 
-            : 'bg-red-50 border-red-500 text-red-700'
-        }`}>
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              {confirmationType === 'success' ? (
-                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              ) : (
-                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              )}
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium">{confirmationMessage}</p>
-            </div>
-            <div className="ml-auto pl-3">
-              <div className="-mx-1.5 -my-1.5">
-                <button
-                  onClick={() => setShowConfirmation(false)}
-                  className={`inline-flex rounded-md p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                    confirmationType === 'success' 
-                      ? 'bg-green-50 text-green-500 hover:bg-green-100 focus:ring-green-600 focus:ring-offset-green-50' 
-                      : 'bg-red-50 text-red-500 hover:bg-red-100 focus:ring-red-600 focus:ring-offset-red-50'
-                  }`}
-                >
-                  <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+      <motion.div
+        initial={{ opacity: 0, x: 100 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 100 }}
+        className="fixed top-4 right-4 z-50"
+      >
+        <div 
+          className="rounded-2xl p-5 shadow-xl flex items-start space-x-4"
+          style={{
+            background: confirmationType === 'success' 
+              ? 'linear-gradient(135deg, #f0fdf4, #dcfce7)'
+              : 'linear-gradient(135deg, #fef2f2, #fee2e2)',
+            boxShadow: '20px 20px 60px #c5cdd8, -20px -20px 60px #ffffff',
+            border: `2px solid ${confirmationType === 'success' ? '#86efac' : '#fca5a5'}`
+          }}
+        >
+          <div 
+            className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+            style={{
+              background: confirmationType === 'success'
+                ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+                : 'linear-gradient(135deg, #ef4444, #dc2626)',
+              boxShadow: '4px 4px 8px rgba(0,0,0,0.1)',
+            }}
+          >
+            {confirmationType === 'success' ? (
+              <CheckCircle className="w-6 h-6 text-white" />
+            ) : (
+              <AlertCircle className="w-6 h-6 text-white" />
+            )}
           </div>
+          <div>
+            <h3 className={`font-semibold text-sm ${
+              confirmationType === 'success' ? 'text-green-800' : 'text-red-800'
+            }`}>
+              {confirmationType === 'success' ? 'Success!' : 'Error'}
+            </h3>
+            <p className={`text-sm mt-1 ${
+              confirmationType === 'success' ? 'text-green-600' : 'text-red-600'
+            }`}>
+              {confirmationMessage}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowConfirmation(false)}
+            className="p-1 hover:bg-black/5 rounded-lg transition-colors"
+          >
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
         </div>
-      </div>
+      </motion.div>
     );
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div 
+        className="min-h-screen flex items-center justify-center p-4"
+        style={{
+          background: 'linear-gradient(135deg, #e8edf5 0%, #d5dce8 25%, #cbd5e1 50%, #d5dce8 75%, #e8edf5 100%)',
+        }}
+      >
+        <div 
+          className="w-16 h-16 rounded-3xl flex items-center justify-center"
+          style={{
+            background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+            boxShadow: '8px 8px 16px #c5cdd8, -8px -8px 16px #ffffff',
+          }}
+        >
+          <Loader2 className="w-8 h-8 text-[#0057D9] animate-spin" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div 
+      className="min-h-screen py-12 px-4 sm:px-6 lg:px-8"
+      style={{
+        background: 'linear-gradient(135deg, #e8edf5 0%, #d5dce8 25%, #cbd5e1 50%, #d5dce8 75%, #e8edf5 100%)',
+      }}
+    >
       <Head>
-        <title>Customer Reviews</title>
+        <title>Student Reviews</title>
         <meta name="description" content="Share your experience with us" />
       </Head>
 
-      {/* Confirmation Popup */}
+      {/* Animated Background Particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(12)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              width: Math.random() * 60 + 20,
+              height: Math.random() * 60 + 20,
+              background: `radial-gradient(circle, rgba(0,87,217,${Math.random() * 0.06 + 0.02}) 0%, transparent 70%)`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              x: [0, Math.random() * 60 - 30, 0],
+              y: [0, Math.random() * 60 - 30, 0],
+              scale: [1, Math.random() * 0.4 + 0.8, 1],
+            }}
+            transition={{
+              duration: Math.random() * 12 + 8,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          />
+        ))}
+      </div>
+
       <ConfirmationPopup />
 
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-blue-700 mb-4">Reviews</h1>
-          <p className="text-lg text-gray-600 mb-8">See what our Reviews are saying about us</p>
+      <div className="max-w-6xl mx-auto relative z-10">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <div 
+            className="inline-flex p-4 rounded-3xl mb-6"
+            style={{
+              background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+              boxShadow: '8px 8px 16px #c5cdd8, -8px -8px 16px #ffffff',
+            }}
+          >
+            <div 
+              className="w-20 h-20 rounded-2xl flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(135deg, #0057D9, #003E99)',
+                boxShadow: 'inset 2px 2px 5px rgba(255,255,255,0.2), inset -2px -2px 5px rgba(0,0,0,0.2)',
+              }}
+            >
+              <MessageSquare className="w-10 h-10 text-white" />
+            </div>
+          </div>
           
-          <button
+          <h1 
+            className="text-5xl font-bold mb-4"
+            style={{
+              background: 'linear-gradient(135deg, #1e293b, #334155)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
+            Student Reviews
+          </h1>
+          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+            See what our community is saying about their experience with EduManage
+          </p>
+
+          <motion.button
             onClick={() => setShowForm(!showForm)}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3 px-8 rounded-full shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex items-center mx-auto"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            className="mt-6 h-[52px] px-8 rounded-2xl font-semibold text-white flex items-center justify-center space-x-2 mx-auto transition-all duration-300 hover:shadow-lg"
+            style={{
+              background: showForm 
+                ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                : 'linear-gradient(135deg, #0057D9, #003E99)',
+              boxShadow: '8px 8px 16px #c5cdd8, -8px -8px 16px #ffffff',
+            }}
           >
             {showForm ? (
               <>
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                Cancel Review
+                <X className="w-5 h-5" />
+                <span>Cancel Review</span>
               </>
             ) : (
               <>
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Add Your Review
+                <Plus className="w-5 h-5" />
+                <span>Add Your Review</span>
               </>
             )}
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
 
         {/* Review Form */}
-        {showForm && (
-          <div className="bg-white rounded-2xl shadow-xl p-8 mb-12 animate-fade-in">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Share Your Experience</h2>
-            <form onSubmit={handleSubmitReview} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                    required
-                    placeholder="Enter your name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">You are a</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({...formData, category: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                  >
-                    <option value="visitor">Visitor</option>
-                    <option value="student">Student</option>
-                    <option value="staff">Staff</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Your Rating</label>
-                <RatingInput 
-                  value={formData.rating} 
-                  onChange={(rating) => setFormData({...formData, rating})} 
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Your Review</label>
-                <textarea
-                  value={formData.review}
-                  onChange={(e) => setFormData({...formData, review: e.target.value})}
-                  rows="4"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                  required
-                  placeholder="Share your experience..."
-                ></textarea>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 flex items-center justify-center"
+        <AnimatePresence>
+          {showForm && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: 'auto' }}
+              exit={{ opacity: 0, y: -20, height: 0 }}
+              className="mb-12"
+            >
+              <div 
+                className="rounded-3xl p-8 sm:p-10"
+                style={{
+                  background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                  boxShadow: '20px 20px 60px #c5cdd8, -20px -20px 60px #ffffff, inset 1px 1px 2px rgba(255,255,255,0.5)',
+                }}
               >
-                {isSubmitting ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Submitting...
-                  </>
-                ) : 'Submit Review'}
-              </button>
-            </form>
-          </div>
-        )}
+                <div className="flex items-center space-x-3 mb-6">
+                  <div 
+                    className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(135deg, #0057D9, #003E99)',
+                      boxShadow: '4px 4px 8px #c5cdd8, -4px -4px 8px #ffffff',
+                    }}
+                  >
+                    <Sparkles className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">Share Your Experience</h2>
+                </div>
+
+                <form onSubmit={handleSubmitReview} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3 ml-2">
+                        Your Name
+                      </label>
+                      <div 
+                        className={`rounded-2xl transition-all duration-300 ${
+                          focusedField === 'name' 
+                            ? 'shadow-[inset_4px_4px_8px_#c5cdd8,inset_-4px_-4px_8px_#ffffff]' 
+                            : 'shadow-[4px_4px_8px_#c5cdd8,-4px_-4px_8px_#ffffff]'
+                        }`}
+                      >
+                        <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                          <User className={`w-5 h-5 transition-colors duration-300 ${
+                            focusedField === 'name' ? 'text-[#0057D9]' : 'text-gray-400'
+                          }`} />
+                        </div>
+                        <input
+                          type="text"
+                          value={formData.name}
+                          onChange={(e) => setFormData({...formData, name: e.target.value})}
+                          onFocus={() => setFocusedField('name')}
+                          onBlur={() => setFocusedField(null)}
+                          className="block w-full h-[52px] pl-14 pr-4 rounded-2xl text-gray-900 placeholder-gray-400 font-medium focus:outline-none transition-all duration-300"
+                          style={{ background: 'transparent' }}
+                          required
+                          placeholder="Enter your name"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3 ml-2">
+                        You are a
+                      </label>
+                      <div 
+                        className={`rounded-2xl transition-all duration-300 ${
+                          focusedField === 'category' 
+                            ? 'shadow-[inset_4px_4px_8px_#c5cdd8,inset_-4px_-4px_8px_#ffffff]' 
+                            : 'shadow-[4px_4px_8px_#c5cdd8,-4px_-4px_8px_#ffffff]'
+                        }`}
+                      >
+                        <select
+                          value={formData.category}
+                          onChange={(e) => setFormData({...formData, category: e.target.value})}
+                          onFocus={() => setFocusedField('category')}
+                          onBlur={() => setFocusedField(null)}
+                          className="block w-full h-[52px] pl-5 pr-10 rounded-2xl text-gray-900 font-medium focus:outline-none transition-all duration-300 appearance-none"
+                          style={{ background: 'transparent' }}
+                        >
+                          <option value="visitor">Visitor</option>
+                          <option value="student">Student</option>
+                          <option value="staff">Staff</option>
+                        </select>
+                        <div className="absolute inset-y-0 right-0 pr-5 flex items-center pointer-events-none">
+                          <ChevronDown className="w-5 h-5 text-gray-400" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3 ml-2">
+                      Your Rating
+                    </label>
+                    <div 
+                      className="inline-flex p-3 rounded-2xl"
+                      style={{
+                        background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                        boxShadow: 'inset 4px 4px 8px #c5cdd8, inset -4px -4px 8px #ffffff',
+                      }}
+                    >
+                      <StarRating 
+                        rating={formData.rating} 
+                        interactive={true}
+                        onChange={(rating) => setFormData({...formData, rating})}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3 ml-2">
+                      Your Review
+                    </label>
+                    <div 
+                      className={`rounded-2xl transition-all duration-300 ${
+                        focusedField === 'review' 
+                          ? 'shadow-[inset_4px_4px_8px_#c5cdd8,inset_-4px_-4px_8px_#ffffff]' 
+                          : 'shadow-[4px_4px_8px_#c5cdd8,-4px_-4px_8px_#ffffff]'
+                      }`}
+                    >
+                      <textarea
+                        value={formData.review}
+                        onChange={(e) => setFormData({...formData, review: e.target.value})}
+                        onFocus={() => setFocusedField('review')}
+                        onBlur={() => setFocusedField(null)}
+                        rows="4"
+                        className="block w-full p-5 rounded-2xl text-gray-900 placeholder-gray-400 font-medium focus:outline-none transition-all duration-300 resize-none"
+                        style={{ background: 'transparent' }}
+                        required
+                        placeholder="Share your experience with EduManage..."
+                      />
+                    </div>
+                  </div>
+
+                  <motion.button
+                    type="submit"
+                    disabled={isSubmitting}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    className="w-full h-[52px] rounded-2xl font-semibold text-white flex items-center justify-center space-x-2 transition-all duration-300 disabled:opacity-70"
+                    style={{
+                      background: 'linear-gradient(135deg, #0057D9, #003E99)',
+                      boxShadow: '8px 8px 16px #c5cdd8, -8px -8px 16px #ffffff',
+                    }}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Submitting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5" />
+                        <span>Submit Review</span>
+                      </>
+                    )}
+                  </motion.button>
+                </form>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Reviews Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {displayedReviews.map((review, index) => (
-            <div 
-              key={review._id} 
-              className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 animate-fade-in flex flex-col"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div className="p-6 flex-grow">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-900">{review.name}</h3>
-                    <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full mt-2 ${
-                      review.category === 'student' 
-                        ? 'bg-blue-100 text-blue-800' 
-                        : review.category === 'staff'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-purple-100 text-purple-800'
-                    }`}>
-                      {review.category.charAt(0).toUpperCase() + review.category.slice(1)}
-                    </span>
+          {displayedReviews.map((review, index) => {
+            const CategoryIcon = getCategoryIcon(review.category);
+            const categoryColor = getCategoryColor(review.category);
+            const categoryGradient = getCategoryGradient(review.category);
+            
+            return (
+              <motion.div
+                key={review._id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.08 }}
+                whileHover={{ y: -5 }}
+                className="rounded-2xl overflow-hidden flex flex-col"
+                style={{
+                  background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                  boxShadow: '12px 12px 24px #c5cdd8, -12px -12px 24px #ffffff',
+                }}
+              >
+                <div className="p-6 flex-grow">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div 
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                        style={{
+                          background: categoryGradient,
+                          boxShadow: '4px 4px 8px rgba(0,0,0,0.1)',
+                        }}
+                      >
+                        <CategoryIcon className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">{review.name}</h3>
+                        <span 
+                          className="inline-block px-3 py-1 text-xs font-medium rounded-xl mt-1"
+                          style={{
+                            background: categoryGradient,
+                            color: 'white',
+                            boxShadow: '2px 2px 4px rgba(0,0,0,0.1)',
+                          }}
+                        >
+                          {review.category.charAt(0).toUpperCase() + review.category.slice(1)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <StarRating rating={review.rating} />
+                  
+                  <div className="mb-4">
+                    <StarRating rating={review.rating} />
+                  </div>
+
+                  <div className="relative">
+                    <Quote className="w-5 h-5 text-[#0057D9] opacity-30 absolute -top-1 -left-1" />
+                    <p className="text-gray-600 pl-4 line-clamp-4 leading-relaxed">
+                      {review.review}
+                    </p>
+                  </div>
                 </div>
                 
-                <p className="text-gray-600 mb-6 line-clamp-4">{review.review}</p>
-              </div>
-              
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
-                <div className="text-sm text-gray-500">
-                  {new Date(review.createdAt).toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
+                <div className="px-6 py-4 border-t border-gray-200/50 flex items-center justify-between">
+                  <div className="flex items-center space-x-2 text-sm text-gray-500">
+                    <Calendar className="w-4 h-4" />
+                    <span>
+                      {new Date(review.createdAt).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric' 
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-1 text-[#0057D9]">
+                    <Heart className="w-4 h-4 fill-[#0057D9]/20 text-[#0057D9]/40" />
+                    <span className="text-xs font-medium">Helpful</span>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Load More Button */}
         {hasMoreReviews && (
-          <div className="text-center">
-            <button
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-center"
+          >
+            <motion.button
               onClick={handleLoadMore}
-              className="bg-white text-blue-600 border border-blue-600 hover:bg-blue-600 hover:text-white font-medium py-3 px-8 rounded-full shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex items-center mx-auto"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="h-[52px] px-8 rounded-2xl font-semibold text-[#0057D9] flex items-center justify-center space-x-2 mx-auto transition-all duration-300"
+              style={{
+                background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                boxShadow: '8px 8px 16px #c5cdd8, -8px -8px 16px #ffffff',
+              }}
             >
-              Load More Reviews
-              <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </div>
+              <span>Load More Reviews</span>
+              <ChevronDown className="w-5 h-5" />
+            </motion.button>
+          </motion.div>
         )}
 
         {!hasMoreReviews && reviews.length > 0 && (
-          <div className="text-center py-6">
-            <p className="text-gray-500">You've reached the end of all reviews.</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-6"
+          >
+            <div 
+              className="inline-flex items-center space-x-2 px-6 py-3 rounded-2xl"
+              style={{
+                background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                boxShadow: 'inset 4px 4px 8px #c5cdd8, inset -4px -4px 8px #ffffff',
+              }}
+            >
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              <span className="text-sm text-gray-600">You've seen all {reviews.length} reviews</span>
+            </div>
+          </motion.div>
         )}
 
+        {/* Empty State */}
         {reviews.length === 0 && (
-          <div className="text-center py-16 bg-white rounded-2xl shadow-md">
-            <div className="text-gray-400 mb-4">
-              <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
-              </svg>
-            </div>
-            <p className="text-gray-500 text-lg mb-4">No reviews yet. Be the first to share your experience!</p>
-            <button
-              onClick={() => setShowForm(true)}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2 px-6 rounded-full shadow-md hover:shadow-lg transition-all duration-300"
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-16"
+          >
+            <div 
+              className="max-w-md mx-auto rounded-3xl p-12"
+              style={{
+                background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                boxShadow: '20px 20px 60px #c5cdd8, -20px -20px 60px #ffffff',
+              }}
             >
-              Write a Review
-            </button>
-          </div>
+              <div 
+                className="w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6"
+                style={{
+                  background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                  boxShadow: '8px 8px 16px #c5cdd8, -8px -8px 16px #ffffff, inset 2px 2px 4px rgba(255,255,255,0.5)',
+                }}
+              >
+                <MessageSquare className="w-12 h-12 text-gray-400" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">No Reviews Yet</h3>
+              <p className="text-gray-500 mb-6">Be the first to share your experience with our community!</p>
+              <motion.button
+                onClick={() => setShowForm(true)}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="h-[48px] px-8 rounded-2xl font-semibold text-white flex items-center justify-center space-x-2 mx-auto"
+                style={{
+                  background: 'linear-gradient(135deg, #0057D9, #003E99)',
+                  boxShadow: '8px 8px 16px #c5cdd8, -8px -8px 16px #ffffff',
+                }}
+              >
+                <Plus className="w-5 h-5" />
+                <span>Write a Review</span>
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Footer Stats */}
+        {reviews.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="mt-12 text-center"
+          >
+            <div 
+              className="inline-flex items-center space-x-6 px-8 py-4 rounded-3xl"
+              style={{
+                background: 'linear-gradient(135deg, #e8edf5, #ffffff)',
+                boxShadow: 'inset 4px 4px 8px #c5cdd8, inset -4px -4px 8px #ffffff',
+              }}
+            >
+              <div className="flex items-center space-x-2">
+                <MessageSquare className="w-5 h-5 text-[#0057D9]" />
+                <span className="font-semibold text-gray-900">{reviews.length}</span>
+                <span className="text-sm text-gray-500">Reviews</span>
+              </div>
+              <div className="w-px h-8 bg-gray-300" />
+              <div className="flex items-center space-x-2">
+                <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                <span className="font-semibold text-gray-900">
+                  {(reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)}
+                </span>
+                <span className="text-sm text-gray-500">Average Rating</span>
+              </div>
+            </div>
+          </motion.div>
         )}
       </div>
 
       <style jsx global>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes slide-in {
-          from { opacity: 0; transform: translateX(100%); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        
-        .animate-fade-in {
-          opacity: 0;
-          animation: fade-in 0.6s ease-out forwards;
-        }
-        
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out forwards;
-        }
-        
-        /* Glowing animation for stars */
-        @keyframes glow {
-          0% { filter: drop-shadow(0 0 2px rgba(255, 204, 0, 0.6)); }
-          50% { filter: drop-shadow(0 0 6px rgba(255, 204, 0, 0.8)); }
-          100% { filter: drop-shadow(0 0 2px rgba(255, 204, 0, 0.6)); }
-        }
-        
-        .text-yellow-400 {
-          animation: glow 2s infinite;
-        }
-        
         .line-clamp-4 {
           display: -webkit-box;
           -webkit-line-clamp: 4;
