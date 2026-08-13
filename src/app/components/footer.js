@@ -62,7 +62,7 @@ const Footer = () => {
   ];
 
   const contactInfo = [
-    { icon: FiMapPin, value: "123 Education Lane, Knowledge City" },
+    { icon: FiMapPin, value: "123 education mangement, Knowledge City" },
     { icon: FiPhone, value: "+91 123 456 7890" },
     { icon: FiMail, value: "info@edumanage.com" },
   ];
